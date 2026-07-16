@@ -24,3 +24,32 @@ Pencil 设计文件：`docs/design/strength-training.pen`
 ## 打开设计稿
 
 在 [Pencil](https://docs.pencil.dev/) 中打开 `docs/design/strength-training.pen`，或使用 Cursor Pencil 扩展直接编辑。
+
+Pencil 默认不会自动进 Git，改完后先 **Cmd+S 保存**，再用同步脚本。
+
+## 同步到 GitHub
+
+仓库提供一键脚本，把 Pencil 本地文件复制到 `docs/design/`，并可选择提交、推送：
+
+```bash
+# 仅复制（不提交）
+./scripts/sync-design.sh
+
+# 复制 + 提交 + 推送
+./scripts/sync-design.sh -m "design: 更新训练页计时布局" -p
+
+# 使用默认提交说明并推送
+./scripts/sync-design.sh --push
+```
+
+Pencil 源文件默认路径：
+
+`~/.pencil/documents/37054c31-2220-4b11-b030-9e05fddfab65/pencil-new.pen`
+
+若路径不同，可覆盖：
+
+```bash
+PENCIL_SOURCE=/你的路径/xxx.pen ./scripts/sync-design.sh --push
+```
+
+> **注意**：只有执行了带 `-p` / `--push` 的命令，改动才会出现在 GitHub 上。
