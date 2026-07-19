@@ -4,6 +4,7 @@
   "goal": "三大项总和",
   "principle": "主项连续性优先；CF 服务恢复与条件，不抢力量日恢复",
   "weeks": 4,
+  "optionalTestWeek": 5,
   "weekTemplate": [
     { "weekday": 1, "key": "squat", "label": "深蹲", "type": "strength" },
     { "weekday": 2, "key": "bench", "label": "卧推", "type": "strength" },
@@ -17,7 +18,14 @@
     "1": "加重周",
     "2": "加重周",
     "3": "维持周",
-    "4": "减量周"
+    "4": "减量周",
+    "5": "测力周"
+  },
+  "testing": {
+    "policyFile": "testing.json",
+    "weekFilePattern": "weeks/week-05/strength/{strengthTier}.json",
+    "defaultEveryNBlocks": 2,
+    "summary": "训练块内用 e1RM；正式 PR 在减量后的 week-05，默认每 2 块测一次"
   },
   "selection": {
     "strengthFile": "weeks/week-{nn}/strength/{strengthTier}.json",
