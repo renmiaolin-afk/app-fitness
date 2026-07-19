@@ -1,0 +1,16 @@
+{
+  "week": 3,
+  "phase": "维持周",
+  "inheritFrom": "week-01",
+  "strengthDelta": {
+    "main": {
+      "beginner": { "percentOf1rmDelta": 0.05, "setsDelta": 0 },
+      "intermediate": { "percentOf1rmDelta": 0.04 },
+      "advanced": { "percentOf1rmDelta": 0.025, "setsDelta": 0, "note": "强度略升或维持顶组，不堆容量" }
+    },
+    "accessories": "可砍 1 个辅助动作"
+  },
+  "cfDelta": {
+    "note": "Metcon 时长/cap 略收紧，避免影响下周减量前恢复"
+  }
+}

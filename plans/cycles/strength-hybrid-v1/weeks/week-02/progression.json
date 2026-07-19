@@ -1,0 +1,16 @@
+{
+  "week": 2,
+  "phase": "加重周",
+  "inheritFrom": "week-01",
+  "strengthDelta": {
+    "main": {
+      "beginner": { "percentOf1rmDelta": 0.025, "note": "主项 +2.5% 或 +2.5kg" },
+      "intermediate": { "percentOf1rmDelta": 0.025 },
+      "advanced": { "percentOf1rmDelta": 0.015, "note": "较强档微加重，优先完成质量" }
+    },
+    "accessories": "保持组数，RPE ≤ 8"
+  },
+  "cfDelta": {
+    "note": "更换 Metcon 刺激，技能动作轮换；总量不超过 week-01"
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "cycleId": "strength-hybrid-v1",
+  "week": 1,
+  "cfLevel": "beginner",
+  "format": "class_3block",
+  "sessions": {
+    "thu": {
+      "cfIndex": 1,
+      "title": "CF 课",
+      "subtitle": "技能 → 力量 → Metcon",
+      "durationMin": 45,
+      "intensityNote": "控强度，别抢力量日恢复",
+      "blocks": [
+        {
+          "order": 1,
+          "kind": "skill",
+          "durationMin": 10,
+          "name": "波比节奏",
+          "prescription": "每分钟 6–8 次 × 8′，质量优先"
+        },
+        {
+          "order": 2,
+          "kind": "strength",
+          "durationMin": 12,
+          "name": "壶铃摇摆",
+          "prescription": "5×10（轻–中）"
+        },
+        {
+          "order": 3,
+          "kind": "metcon",
+          "style": "amrap",
+          "durationMin": 12,
+          "name": "AMRAP 12",
+          "movements": [
+            "10 空蹲",
+            "10 卡路里划船",
+            "8 波比"
+          ]
+        }
+      ]
+    },
+    "sat": {
+      "cfIndex": 2,
+      "title": "CF 课",
+      "subtitle": "技能 → 力量 → Metcon",
+      "durationMin": 40,
+      "intensityNote": "本周第 2 次 CF，整体偏短",
+      "blocks": [
+        {
+          "order": 1,
+          "kind": "skill",
+          "durationMin": 8,
+          "name": "箱上踏步 / 跳箱",
+          "prescription": "3×8（高度可控）"
+        },
+        {
+          "order": 2,
+          "kind": "strength",
+          "durationMin": 10,
+          "name": "哑铃推举",
+          "prescription": "4×8"
+        },
+        {
+          "order": 3,
+          "kind": "metcon",
+          "style": "for_time",
+          "capMin": 12,
+          "name": "For Time",
+          "movements": [
+            "200 m 跑步 / 划船",
+            "15 壶铃摇摆",
+            "10 波比",
+            "重复 3 轮"
+          ]
+        }
+      ]
+    }
+  }
+}

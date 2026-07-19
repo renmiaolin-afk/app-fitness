@@ -1,0 +1,26 @@
+{
+  "id": "strength-hybrid-v1",
+  "name": "力量优先混合周期",
+  "goal": "三大项总和",
+  "principle": "主项连续性优先；CF 服务恢复与条件，不抢力量日恢复",
+  "weeks": 4,
+  "weekTemplate": [
+    { "weekday": 1, "key": "squat", "label": "深蹲", "type": "strength" },
+    { "weekday": 2, "key": "bench", "label": "卧推", "type": "strength" },
+    { "weekday": 3, "key": "deadlift", "label": "硬拉", "type": "strength" },
+    { "weekday": 4, "key": "cf", "label": "CF", "type": "cf", "cfIndex": 1 },
+    { "weekday": 5, "key": "ohp", "label": "上推", "type": "strength" },
+    { "weekday": 6, "key": "cf", "label": "CF", "type": "cf", "cfIndex": 2 },
+    { "weekday": 7, "key": "rest", "label": "休", "type": "rest" }
+  ],
+  "phases": {
+    "1": "加重周",
+    "2": "加重周",
+    "3": "维持周",
+    "4": "减量周"
+  },
+  "selection": {
+    "strengthFile": "weeks/week-{nn}/strength/{strengthTier}.json",
+    "cfFile": "weeks/week-{nn}/cf/{cfLevel}.json"
+  }
+}

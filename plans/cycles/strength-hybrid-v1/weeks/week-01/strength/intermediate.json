@@ -1,0 +1,85 @@
+{
+  "cycleId": "strength-hybrid-v1",
+  "week": 1,
+  "phase": "加重周",
+  "strengthTier": "intermediate",
+  "days": {
+    "mon": {
+      "type": "strength",
+      "theme": "腿部训练",
+      "main": {
+        "name": "深蹲",
+        "tag": "必练",
+        "sets": 4,
+        "reps": 4,
+        "load": { "type": "percent_1rm", "percentOf1rm": 0.8 },
+        "exampleKg": 110,
+        "restSec": 240
+      },
+      "accessories": [
+        { "name": "罗马尼亚硬拉", "sets": 3, "reps": 8 },
+        { "name": "腿举", "sets": 3, "reps": 10 },
+        { "name": "核心", "sets": 2, "reps": 12 }
+      ],
+      "accessoryNote": "主项后完成即可"
+    },
+    "tue": {
+      "type": "strength",
+      "theme": "卧推日",
+      "main": {
+        "name": "卧推",
+        "tag": "必练",
+        "sets": 4,
+        "reps": 4,
+        "load": { "type": "percent_1rm", "percentOf1rm": 0.8 },
+        "exampleKg": 80,
+        "restSec": 210
+      },
+      "accessories": [
+        { "name": "实力推", "sets": 3, "reps": 8 },
+        { "name": "哑铃划船", "sets": 3, "reps": 10 },
+        { "name": "三头下压", "sets": 3, "reps": 12 }
+      ],
+      "accessoryNote": "主项后完成即可"
+    },
+    "wed": {
+      "type": "strength",
+      "theme": "硬拉日",
+      "main": {
+        "name": "硬拉",
+        "tag": "必练",
+        "sets": 3,
+        "reps": 4,
+        "load": { "type": "percent_1rm", "percentOf1rm": 0.8 },
+        "exampleKg": 135,
+        "restSec": 240
+      },
+      "accessories": [
+        { "name": "臀推", "sets": 3, "reps": 8 },
+        { "name": "引体向上", "sets": 3, "reps": 8 },
+        { "name": "核心", "sets": 2, "reps": 12 }
+      ],
+      "accessoryNote": "主项后完成即可"
+    },
+    "fri": {
+      "type": "strength",
+      "theme": "上推日",
+      "main": {
+        "name": "站姿推举",
+        "tag": "必练",
+        "sets": 4,
+        "reps": 5,
+        "load": { "type": "percent_bench_1rm", "percentOf1rm": 0.55 },
+        "exampleKg": 55,
+        "restSec": 180
+      },
+      "accessories": [
+        { "name": "侧平举", "sets": 3, "reps": 12 },
+        { "name": "面拉", "sets": 3, "reps": 12 },
+        { "name": "哑铃卧推", "sets": 2, "reps": 10 }
+      ],
+      "accessoryNote": "主项后完成即可"
+    },
+    "sun": { "type": "rest", "theme": "休息", "note": "走动或活动度即可" }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "description": "CrossFit 能力档：决定技能动作池、杠铃重量与 Metcon 缩放。",
+  "levels": [
+    {
+      "id": "beginner",
+      "label": "初级",
+      "skills": ["burpee", "row", "air_squat", "kb_swing", "box_step_up"],
+      "avoid": ["muscle_up", "snatch", "butterfly_pullup"],
+      "defaultBarbellKg": { "male": 30, "female": 20 }
+    },
+    {
+      "id": "intermediate",
+      "label": "中级",
+      "skills": ["power_clean", "hang_clean", "snatch", "pullup", "muscle_up", "toes_to_bar"],
+      "avoid": ["butterfly_pullup_high_volume", "ring_muscle_up_high_volume"],
+      "defaultBarbellKg": { "male": 43, "female": 29 },
+      "note": "会高翻、抓举、双力臂；馆课可按 Rx 偏 Scaled 排课"
+    },
+    {
+      "id": "advanced",
+      "label": "高级",
+      "skills": ["butterfly_pullup", "ring_muscle_up", "squat_snatch", "bar_muscle_up", "handstand_walk"],
+      "avoid": [],
+      "defaultBarbellKg": { "male": 52, "female": 36 }
+    }
+  ]
+}
