@@ -1,0 +1,131 @@
+{
+  "cycleId": "strength-hybrid-v1",
+  "week": 4,
+  "phase": "减量周",
+  "strengthTier": "beginner",
+  "days": {
+    "mon": {
+      "type": "strength",
+      "theme": "腿部训练",
+      "main": {
+        "name": "深蹲",
+        "tag": "必练",
+        "sets": 2,
+        "reps": 5,
+        "load": {
+          "type": "percent_1rm",
+          "percentOf1rm": 0.65
+        },
+        "exampleKg": 65.0,
+        "restSec": 180
+      },
+      "accessories": [
+        {
+          "name": "罗马尼亚硬拉",
+          "sets": 2,
+          "reps": 10
+        },
+        {
+          "name": "腿举",
+          "sets": 2,
+          "reps": 12
+        }
+      ],
+      "accessoryNote": "减量周只保留 1–2 个轻辅助"
+    },
+    "tue": {
+      "type": "strength",
+      "theme": "卧推日",
+      "main": {
+        "name": "卧推",
+        "tag": "必练",
+        "sets": 2,
+        "reps": 5,
+        "load": {
+          "type": "percent_1rm",
+          "percentOf1rm": 0.65
+        },
+        "exampleKg": 47.5,
+        "restSec": 180
+      },
+      "accessories": [
+        {
+          "name": "哑铃推举",
+          "sets": 2,
+          "reps": 10
+        },
+        {
+          "name": "坐姿划船",
+          "sets": 2,
+          "reps": 10
+        }
+      ],
+      "accessoryNote": "减量周只保留 1–2 个轻辅助"
+    },
+    "wed": {
+      "type": "strength",
+      "theme": "硬拉日",
+      "main": {
+        "name": "硬拉",
+        "tag": "必练",
+        "sets": 2,
+        "reps": 5,
+        "load": {
+          "type": "percent_1rm",
+          "percentOf1rm": 0.65
+        },
+        "exampleKg": 80.0,
+        "restSec": 210
+      },
+      "accessories": [
+        {
+          "name": "臀推",
+          "sets": 2,
+          "reps": 10
+        },
+        {
+          "name": "背阔下拉",
+          "sets": 2,
+          "reps": 10
+        }
+      ],
+      "accessoryNote": "减量周只保留 1–2 个轻辅助"
+    },
+    "fri": {
+      "type": "strength",
+      "theme": "上推日",
+      "main": {
+        "name": "站姿推举",
+        "tag": "必练",
+        "sets": 2,
+        "reps": 6,
+        "load": {
+          "type": "percent_bench_1rm",
+          "percentOf1rm": 0.45
+        },
+        "exampleKg": 31.5,
+        "restSec": 150
+      },
+      "accessories": [
+        {
+          "name": "侧平举",
+          "sets": 2,
+          "reps": 12
+        },
+        {
+          "name": "面拉",
+          "sets": 2,
+          "reps": 12
+        }
+      ],
+      "accessoryNote": "减量周只保留 1–2 个轻辅助"
+    },
+    "sun": {
+      "type": "rest",
+      "theme": "休息",
+      "note": "走动或活动度即可"
+    }
+  },
+  "derivedFrom": "week-01",
+  "note": "由 week-01 按 progression 生成（减量周）"
+}

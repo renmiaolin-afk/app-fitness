@@ -34,6 +34,8 @@ strengthTier + cfLevel + 当前周次
 
 周结构：深蹲 / 卧推 / 硬拉 / **CF** / 上推 / **CF** / 休  
 
+当前周期 `strength-hybrid-v1`：**4 周完整计划**（加重 → 加重 → 维持 → 减量），力量三档 × CF 三档均可独立组合。
+
 详见 [`plans/README.md`](./plans/README.md)。
 
 ## 设计稿页面

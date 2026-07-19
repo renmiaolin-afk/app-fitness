@@ -1,0 +1,78 @@
+{
+  "cycleId": "strength-hybrid-v1",
+  "week": 3,
+  "cfLevel": "advanced",
+  "format": "class_3block",
+  "note": "第 3 周 CF 课表（馆课三段式，按能力档）",
+  "sessions": {
+    "thu": {
+      "cfIndex": 1,
+      "title": "CF 课",
+      "subtitle": "技能 → 力量 → Metcon",
+      "durationMin": 45,
+      "intensityNote": "维持周：避免红线",
+      "blocks": [
+        {
+          "order": 1,
+          "kind": "skill",
+          "durationMin": 10,
+          "name": "吊环双力臂",
+          "prescription": "EMOM 6′ · 2 次"
+        },
+        {
+          "order": 2,
+          "kind": "strength",
+          "durationMin": 12,
+          "name": "高翻",
+          "prescription": "5×2 @ 75%"
+        },
+        {
+          "order": 3,
+          "kind": "metcon",
+          "style": "for_time",
+          "capMin": 9,
+          "name": "15-12-9 For Time",
+          "movements": [
+            "深蹲抓 52/36 kg",
+            "蝴蝶引体"
+          ]
+        }
+      ]
+    },
+    "sat": {
+      "cfIndex": 2,
+      "title": "CF 课",
+      "subtitle": "技能 → 力量 → Metcon",
+      "durationMin": 40,
+      "intensityNote": "本周第 2 次 CF，短 AMRAP",
+      "blocks": [
+        {
+          "order": 1,
+          "kind": "skill",
+          "durationMin": 8,
+          "name": "倒立行走",
+          "prescription": "累计 15–20 m"
+        },
+        {
+          "order": 2,
+          "kind": "strength",
+          "durationMin": 10,
+          "name": "推举",
+          "prescription": "4×3 @ 70%"
+        },
+        {
+          "order": 3,
+          "kind": "metcon",
+          "style": "amrap",
+          "durationMin": 8,
+          "name": "AMRAP 8",
+          "movements": [
+            "4 高翻（重）",
+            "6 双力臂",
+            "8 箱跳"
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "cycleId": "strength-hybrid-v1",
+  "week": 4,
+  "cfLevel": "advanced",
+  "format": "class_3block",
+  "note": "第 4 周 CF 课表（馆课三段式，按能力档）",
+  "sessions": {
+    "thu": {
+      "cfIndex": 1,
+      "title": "CF 课",
+      "subtitle": "技能 → 力量 → Metcon",
+      "durationMin": 35,
+      "intensityNote": "减量周：短课控恢复",
+      "blocks": [
+        {
+          "order": 1,
+          "kind": "skill",
+          "durationMin": 8,
+          "name": "吊环支撑 / 双力臂",
+          "prescription": "质量优先"
+        },
+        {
+          "order": 2,
+          "kind": "strength",
+          "durationMin": 8,
+          "name": "高翻",
+          "prescription": "4×2 @ 60–65%"
+        },
+        {
+          "order": 3,
+          "kind": "metcon",
+          "style": "amrap",
+          "durationMin": 8,
+          "name": "AMRAP 8",
+          "movements": [
+            "3 深蹲抓（轻）",
+            "5 引体",
+            "8 箱跳"
+          ]
+        }
+      ]
+    },
+    "sat": {
+      "cfIndex": 2,
+      "title": "CF 课",
+      "subtitle": "技能 → 恢复",
+      "durationMin": 25,
+      "intensityNote": "本周第 2 次主动恢复",
+      "blocks": [
+        {
+          "order": 1,
+          "kind": "skill",
+          "durationMin": 10,
+          "name": "活动度 + 轻技能",
+          "prescription": "肩/髋 + 轻抓举"
+        },
+        {
+          "order": 2,
+          "kind": "metcon",
+          "style": "easy",
+          "durationMin": 10,
+          "name": "轻松有氧",
+          "movements": [
+            "划船 10′ Z2"
+          ]
+        }
+      ]
+    }
+  }
+}
