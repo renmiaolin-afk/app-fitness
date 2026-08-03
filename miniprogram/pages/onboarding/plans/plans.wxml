@@ -1,0 +1,50 @@
+<view class="page page-dock">
+  <view class="page-scroll">
+    <view class="page-title">推荐训练计划</view>
+
+    <view class="analyzing" wx:if="{{analyzing}}">
+      <view class="analyzing-dot"></view>
+      <text class="analyzing-text">正在匹配计划…</text>
+    </view>
+
+    <view class="plan-stack" wx:else>
+      <view class="drag-hint">{{dragHint}}</view>
+      <view
+        wx:for="{{plans}}"
+        wx:key="id"
+        class="hero-card tone-{{index}} {{item.selected ? 'selected' : ''}}"
+        data-id="{{item.id}}"
+        bindtap="select"
+      >
+        <view class="hero-name">{{item.name}}</view>
+        <view class="hero-intro" wx:if="{{item.intro}}">{{item.intro}}</view>
+        <view
+          class="week-row week-row-{{item.id}}"
+          wx:if="{{item.weekCells.length}}"
+          bindtouchmove="onWeekTouchMove"
+          bindtouchend="onWeekTouchEnd"
+          bindtouchcancel="onWeekTouchEnd"
+          catchtouchmove="{{isDragging ? 'noop' : ''}}"
+        >
+          <view
+            wx:for="{{item.weekCells}}"
+            wx:for-item="cell"
+            wx:for-index="cellIndex"
+            wx:key="day"
+            class="week-cell week-cell-{{item.id}} {{cell.rest ? 'rest' : 'train'}} {{cell.dragging ? 'dragging' : ''}} {{cell.dragOver ? 'drag-over' : ''}}"
+            data-plan-id="{{item.id}}"
+            data-index="{{cellIndex}}"
+            catchlongpress="onWeekLongPress"
+          >
+            <text class="wd">{{cell.day}}</text>
+            <text class="wl">{{cell.label}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="footer" wx:if="{{!analyzing}}">
+    <button class="btn-primary" bindtap="confirm">使用此计划，进入今日</button>
+  </view>
+</view>

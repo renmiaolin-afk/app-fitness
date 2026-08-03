@@ -1,0 +1,62 @@
+<ambient-glow />
+<view class="train" style="padding-top: {{navPadTop}}px;">
+  <view class="top">
+    <view class="close" bindtap="openExit">✕</view>
+    <view class="top-main">
+      <text class="name">{{name}}</text>
+      <view class="dots">
+        <view wx:for="{{dots}}" wx:key="index" class="dot {{item}}"></view>
+      </view>
+      <view class="sub">{{subText}}</view>
+    </view>
+  </view>
+
+  <view class="mid">
+    <view
+      class="ring {{timerHot ? 'hot' : ''}} {{phase === 'rest' ? 'rest' : ''}}"
+      style="background: conic-gradient(from -90deg, {{ringColor}} {{ringPct}}%, rgba(255,255,255,0.12) 0);"
+    >
+      <view class="ring-inner">
+        <text class="ring-time">{{displayTime}}</text>
+        <text class="ring-hint">{{unitHint}}</text>
+      </view>
+    </view>
+
+    <view class="load">
+      <view class="kg-row">
+        <text class="kg">{{kg}}</text>
+        <text class="kg-unit">KG</text>
+      </view>
+      <view class="info">{{targetInfo}}</view>
+    </view>
+  </view>
+
+  <view class="bottom">
+    <button class="btn-primary" wx:if="{{phase === 'ready'}}" bindtap="startSet" disabled="{{showCountdown}}">开始本组</button>
+    <block wx:elif="{{phase === 'working'}}">
+      <button class="btn-primary" bindtap="endSet">结束本组</button>
+      <view class="btn-ghost light" bindtap="togglePause">{{pauseText}}</view>
+    </block>
+    <block wx:else>
+      <button class="btn-primary" bindtap="nextSet" disabled="{{showCountdown}}">开始下一组</button>
+      <view class="btn-ghost light" bindtap="addRest">+20 秒</view>
+    </block>
+  </view>
+
+  <view class="countdown-mask" wx:if="{{showCountdown}}" catchtouchmove="noop">
+    <view class="countdown-num">{{countdownNum}}</view>
+    <view class="countdown-label">准备开始</view>
+  </view>
+
+  <view class="mask" wx:if="{{showExit}}" catchtouchmove="noop">
+    <view class="sheet">
+      <view class="sheet-title">结束本次训练？</view>
+      <view class="sheet-desc">已完成组将保留，可从中断处继续。</view>
+      <button class="btn-primary" bindtap="saveExit">保存并退出</button>
+      <button class="btn-dark" bindtap="closeExit">继续训练</button>
+      <view class="btn-ghost light" bindtap="discardExit">不保存，直接退出</view>
+    </view>
+  </view>
+
+  <move-sheet show="{{moveSheetShow}}" move-name="{{name}}" bind:close="closeMoveSheet" />
+</view>

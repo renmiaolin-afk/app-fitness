@@ -1,0 +1,52 @@
+<view class="page page-dock">
+  <view class="page-scroll">
+    <view class="page-title">训练习惯</view>
+    <view class="page-sub">{{fromMe ? '修改后立即生效，不影响当前周期' : '2/2 用于控制剂量与恢复安排'}}</view>
+
+    <view class="card" style="margin-top: 32rpx;">
+      <view class="card-label">平时睡眠怎么样？</view>
+      <view class="chip-row">
+        <view
+          wx:for="{{sleepOptions}}"
+          wx:key="id"
+          class="chip chip-equal {{sleep === item.id ? 'active' : ''}}"
+          data-field="sleep"
+          data-id="{{item.id}}"
+          bindtap="pick"
+        >{{item.label}}</view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-label">有没有需要长期注意的不适？</view>
+      <view class="chip-row">
+        <view
+          wx:for="{{bodyOptions}}"
+          wx:key="id"
+          class="chip chip-equal {{body === item.id ? 'active' : ''}}"
+          data-field="body"
+          data-id="{{item.id}}"
+          bindtap="pick"
+        >{{item.label}}</view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-label">单次通常能练多久？</view>
+      <view class="chip-row">
+        <view
+          wx:for="{{durationOptions}}"
+          wx:key="id"
+          class="chip chip-equal {{duration === item.id ? 'active' : ''}}"
+          data-field="duration"
+          data-id="{{item.id}}"
+          bindtap="pick"
+        >{{item.label}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="footer">
+    <button class="btn-primary" bindtap="next">{{ctaLabel}}</button>
+  </view>
+</view>

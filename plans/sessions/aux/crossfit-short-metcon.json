@@ -1,0 +1,33 @@
+{
+  "id": "crossfit-short-metcon",
+  "auxId": "crossfit",
+  "name": "短时 CF 调节课",
+  "durationMin": 18,
+  "rpeCap": 7,
+  "structure": ["skill", "metcon"],
+  "blocks": [
+    {
+      "name": "技能",
+      "minutes": 6,
+      "examples": {
+        "beginner": ["空蹲技术", "划船节奏", "波比分解"],
+        "intermediate": ["高翻技术", "引体辅助", "双力臂分解"],
+        "advanced": ["蝴蝶引体节奏", "吊环支撑", "抓举轻负荷"]
+      },
+      "cues": ["技术质量优先", "不做力竭"]
+    },
+    {
+      "name": "短 Metcon",
+      "minutes": 12,
+      "format": "AMRAP 或 每分钟启动，总工作 ≤12 分钟",
+      "examples": {
+        "beginner": "AMRAP 10: 8 波比 + 10 空蹲 + 150m 划船",
+        "intermediate": "AMRAP 12: 6 高翻 + 8 引体 + 12 墙球",
+        "advanced": "AMRAP 12: 5 抓举 + 7 蝴蝶引体 + 9 箱跳"
+      },
+      "cues": ["可完整完成动作再加速", "RPE ≤7，留恢复给力量周"]
+    }
+  ],
+  "levelFileHint": "profiles/cf-levels.json 仍可用于技能池与杠铃默认重量",
+  "avoidNextDay": ["heavy_squat", "heavy_deadlift"]
+}

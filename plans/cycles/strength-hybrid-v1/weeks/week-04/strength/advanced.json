@@ -7,7 +7,7 @@
   "days": {
     "mon": {
       "type": "strength",
-      "theme": "腿部训练",
+      "theme": "深蹲 · 下肢",
       "main": {
         "name": "深蹲",
         "tag": "必练",
@@ -32,11 +32,15 @@
           "reps": 10
         }
       ],
-      "accessoryNote": "减量周只保留 1–2 个轻辅助"
+      "accessoryNote": "减量周只保留 1–2 个轻辅助",
+      "focus": [
+        "squat",
+        "legs"
+      ]
     },
     "tue": {
       "type": "strength",
-      "theme": "卧推日",
+      "theme": "卧推 · 背部",
       "main": {
         "name": "卧推",
         "tag": "必练",
@@ -51,21 +55,40 @@
       },
       "accessories": [
         {
-          "name": "实力推",
+          "name": "绳索面拉",
           "sets": 2,
-          "reps": 6
+          "reps": 12,
+          "region": "shoulder"
         },
         {
-          "name": "哑铃划船",
+          "name": "绳索三头下压",
           "sets": 2,
-          "reps": 10
+          "reps": 12
         }
       ],
-      "accessoryNote": "减量周只保留 1–2 个轻辅助"
+      "accessoryNote": "潘德勒划船为背部必练，紧接卧推后做",
+      "focus": [
+        "bench",
+        "back"
+      ],
+      "secondary": {
+        "name": "潘德勒划船",
+        "tag": "必练",
+        "movementId": "pendlay_row",
+        "region": "back",
+        "sets": 3,
+        "reps": 5,
+        "restSec": 120,
+        "cues": [
+          "每一下地板停稳再拉",
+          "躯干接近水平",
+          "不借甩"
+        ]
+      }
     },
     "wed": {
       "type": "strength",
-      "theme": "硬拉日",
+      "theme": "硬拉 · 背部",
       "main": {
         "name": "硬拉",
         "tag": "必练",
@@ -80,23 +103,41 @@
       },
       "accessories": [
         {
-          "name": "臀推",
+          "name": "杠铃臀推",
           "sets": 2,
           "reps": 8
         },
         {
-          "name": "引体向上",
+          "name": "悬垂举腿",
           "sets": 2,
-          "reps": 8
+          "reps": 12
         }
       ],
-      "accessoryNote": "减量周只保留 1–2 个轻辅助"
+      "accessoryNote": "引体向上为背部必练；做不了严格引体见 scalingNote",
+      "focus": [
+        "deadlift",
+        "back"
+      ],
+      "secondary": {
+        "name": "引体向上",
+        "tag": "必练",
+        "movementId": "pullup",
+        "region": "back",
+        "sets": 2,
+        "reps": 8,
+        "restSec": 120,
+        "cues": [
+          "完整幅度",
+          "控制下放"
+        ],
+        "scalingNote": "可负重；保持肩胛控制"
+      }
     },
     "fri": {
       "type": "strength",
-      "theme": "上推日",
+      "theme": "实力推 · 肩部",
       "main": {
-        "name": "站姿推举",
+        "name": "实力推",
         "tag": "必练",
         "sets": 2,
         "reps": 5,
@@ -105,21 +146,49 @@
           "percentOf1rm": 0.47
         },
         "exampleKg": 60.0,
-        "restSec": 210
+        "restSec": 210,
+        "movementId": "strict_press",
+        "region": "shoulder",
+        "cues": [
+          "严格站姿，不借腿",
+          "杠至锁定过头顶",
+          "核心收紧"
+        ]
       },
       "accessories": [
         {
-          "name": "侧平举",
+          "name": "哑铃侧平举",
           "sets": 2,
-          "reps": 12
+          "reps": 12,
+          "region": "shoulder"
         },
         {
-          "name": "面拉",
+          "name": "绳索面拉",
           "sets": 2,
-          "reps": 12
+          "reps": 15,
+          "region": "shoulder"
+        },
+        {
+          "name": "窄握卧推",
+          "sets": 2,
+          "reps": 8
         }
       ],
-      "accessoryNote": "减量周只保留 1–2 个轻辅助"
+      "accessoryNote": "实力推为肩部必练主项；侧平举/面拉补齐肩部",
+      "focus": [
+        "shoulder",
+        "press"
+      ],
+      "secondary": {
+        "name": "引体向上",
+        "tag": "必练",
+        "movementId": "pullup",
+        "region": "back",
+        "sets": 2,
+        "reps": 8,
+        "restSec": 90,
+        "scalingNote": "可负重；保持肩胛控制"
+      }
     },
     "sun": {
       "type": "rest",
@@ -127,5 +196,18 @@
       "note": "走动或活动度即可"
     }
   },
-  "derivedFrom": "week-01"
+  "derivedFrom": "week-01",
+  "requiredMovements": [
+    "pendlay_row",
+    "pullup",
+    "strict_press"
+  ],
+  "backShoulderPolicy": {
+    "weeklyMust": [
+      "实力推",
+      "引体向上",
+      "潘德勒划船"
+    ],
+    "profile": "profiles/required-movements.json"
+  }
 }

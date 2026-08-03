@@ -1,0 +1,103 @@
+<view class="page safe-bottom" style="padding-top: {{navPadTop}}px;" wx:if="{{ready}}">
+  <view class="ambient-glow" aria-hidden="true">
+    <view class="ambient-blob a"></view>
+    <view class="ambient-blob b"></view>
+  </view>
+
+  <view class="nav">
+    <view class="nav-back" bindtap="goBack" aria-role="button" aria-label="返回">
+      <text class="nav-back-chev">‹</text>
+    </view>
+  </view>
+
+  <view class="stack">
+    <!-- 个人信息 + 三大项 -->
+    <view class="hero">
+      <view class="profile-row">
+        <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+          <image
+            class="avatar-img {{avatarUrl ? 'filled' : 'placeholder'}}"
+            src="{{avatarUrl || '/assets/icon-me.png'}}"
+            mode="{{avatarUrl ? 'aspectFill' : 'aspectFit'}}"
+          />
+        </button>
+        <view class="profile-col">
+          <text class="profile-name">{{displayName}}</text>
+          <view class="meta-row">
+            <text class="meta">{{heightCm}}cm</text>
+            <text class="meta-dot">·</text>
+            <text class="meta">{{weightKg}}kg</text>
+            <text class="meta-dot">·</text>
+            <text class="meta">{{genderLabel}}</text>
+            <text class="meta-dot">·</text>
+            <text class="meta">{{ageYears}}岁</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="lifts-block">
+        <view class="sec-head">
+          <text class="sec-title">三大项总和</text>
+          <text class="link" bindtap="reOnboard">编辑</text>
+        </view>
+        <view class="lifts-total">
+          <text class="lifts-total-val">{{total}}</text>
+          <text class="lifts-total-unit">kg</text>
+        </view>
+        <view class="lifts-row">
+          <view class="lift">
+            <text class="lift-name">深蹲</text>
+            <text class="lift-val">{{squat}}<text class="lift-unit">kg</text></text>
+          </view>
+          <view class="lift">
+            <text class="lift-name">卧推</text>
+            <text class="lift-val">{{bench}}<text class="lift-unit">kg</text></text>
+          </view>
+          <view class="lift">
+            <text class="lift-name">硬拉</text>
+            <text class="lift-val">{{deadlift}}<text class="lift-unit">kg</text></text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 训练周期计划 + 本周期目标 -->
+    <view class="card plan-entry" bindtap="goCycle" aria-role="button" aria-label="查看训练周期计划">
+      <view class="plan-top">
+        <view class="plan-text">
+          <text class="plan-title">{{planName}}</text>
+          <view class="plan-goal" wx:if="{{progressText}}">
+            <text class="plan-goal-k">本周期目标</text>
+            <text class="plan-goal-v">{{progressText}}</text>
+          </view>
+        </view>
+        <view class="plan-right">
+          <text class="week-tag">第 {{week}} / {{totalWeeks}} 周</text>
+          <text class="entry-arrow">›</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 训练习惯 -->
+    <view class="card habits-card">
+      <view class="sec-head">
+        <text class="sec-title">训练习惯</text>
+        <text class="link" bindtap="editHabits">编辑</text>
+      </view>
+      <view class="kv">
+        <text class="kv-k">平时睡眠</text>
+        <text class="kv-v">{{sleepLabel}}</text>
+      </view>
+      <view class="kv">
+        <text class="kv-k">身体情况</text>
+        <text class="kv-v">{{bodyLabel}}</text>
+      </view>
+      <view class="kv last">
+        <text class="kv-k">单次时长</text>
+        <text class="kv-v">{{durationLabel}}</text>
+      </view>
+    </view>
+
+    <view class="btn-link danger" bindtap="resetAll">清除本地数据并重新建档</view>
+  </view>
+</view>

@@ -1,0 +1,76 @@
+<view class="page page-dock">
+  <view class="page-scroll">
+    <view class="page-title">建立训练档案</view>
+    <view class="page-sub">1/2 填写身体数据与当前三大项，用于生成处方</view>
+
+    <view class="card" style="margin-top: 32rpx;">
+      <view class="card-label">性别</view>
+      <view class="gender-row">
+        <view class="gender {{gender === 'male' ? 'active' : ''}}" data-v="male" bindtap="setGender">男</view>
+        <view class="gender {{gender === 'female' ? 'active' : ''}}" data-v="female" bindtap="setGender">女</view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="metric" wx:for="{{metrics}}" wx:key="field">
+        <text class="metric-label">{{item.label}}</text>
+        <view class="metric-right">
+          <view class="op" data-field="{{item.field}}" data-delta="{{item.stepNeg}}" bindtap="step">-</view>
+          <view class="metric-box">
+            <input
+              class="metric-input"
+              type="digit"
+              value="{{item.value}}"
+              data-field="{{item.field}}"
+              bindinput="onFieldInput"
+              bindblur="onFieldBlur"
+            />
+          </view>
+          <text class="metric-unit">{{item.unit}}</text>
+          <view class="op" data-field="{{item.field}}" data-delta="{{item.stepPos}}" bindtap="step">+</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-label">当前三大项 1RM（kg）</view>
+      <view class="card-hint">填写预估单次最大重量；后续可按训练表现修正</view>
+      <view class="metric" wx:for="{{lifts}}" wx:key="field">
+        <text class="metric-label">{{item.label}}</text>
+        <view class="metric-right">
+          <view class="op" data-field="{{item.field}}" data-delta="-2.5" bindtap="step">-</view>
+          <view class="metric-box">
+            <input
+              class="metric-input"
+              type="digit"
+              value="{{item.value}}"
+              data-field="{{item.field}}"
+              bindinput="onFieldInput"
+              bindblur="onFieldBlur"
+            />
+          </view>
+          <text class="metric-unit">kg</text>
+          <view class="op" data-field="{{item.field}}" data-delta="2.5" bindtap="step">+</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-label">辅助项目（最多 {{maxAux}} 项）</view>
+      <view class="card-hint">力量举为主线；辅助用于调节日，不挤占三大项适应</view>
+      <view class="chip-row">
+        <view
+          wx:for="{{auxItems}}"
+          wx:key="id"
+          class="chip {{item.active ? 'active' : ''}}"
+          data-id="{{item.id}}"
+          bindtap="toggleAux"
+        >{{item.label}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="footer">
+    <button class="btn-primary" bindtap="next">{{ctaLabel || '下一步'}}</button>
+  </view>
+</view>

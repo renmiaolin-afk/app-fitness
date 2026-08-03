@@ -1,0 +1,78 @@
+module.exports = {
+  "cycleId": "strength-hybrid-v1",
+  "week": 2,
+  "cfLevel": "advanced",
+  "format": "class_3block",
+  "note": "第 2 周 CF 课表（馆课三段式，按能力档）",
+  "sessions": {
+    "thu": {
+      "cfIndex": 1,
+      "title": "CF 课",
+      "subtitle": "技能 → 力量 → Metcon",
+      "durationMin": 55,
+      "intensityNote": "力量优先周期内仍控总量",
+      "blocks": [
+        {
+          "order": 1,
+          "kind": "skill",
+          "durationMin": 12,
+          "name": "蝴蝶引体",
+          "prescription": "EMOM 8′ · 4–6 次"
+        },
+        {
+          "order": 2,
+          "kind": "strength",
+          "durationMin": 15,
+          "name": "深蹲抓",
+          "prescription": "5×2 @ 70–75%"
+        },
+        {
+          "order": 3,
+          "kind": "metcon",
+          "style": "for_time",
+          "capMin": 10,
+          "name": "21-15-9 For Time",
+          "movements": [
+            "高翻 52/36 kg",
+            "蝴蝶引体"
+          ]
+        }
+      ]
+    },
+    "sat": {
+      "cfIndex": 2,
+      "title": "CF 课",
+      "subtitle": "技能 → 力量 → Metcon",
+      "durationMin": 45,
+      "intensityNote": "本周第 2 次 CF，短而密",
+      "blocks": [
+        {
+          "order": 1,
+          "kind": "skill",
+          "durationMin": 10,
+          "name": "吊环双力臂",
+          "prescription": "累计 8–12 次"
+        },
+        {
+          "order": 2,
+          "kind": "strength",
+          "durationMin": 12,
+          "name": "推举",
+          "prescription": "5×2 @ 75%"
+        },
+        {
+          "order": 3,
+          "kind": "metcon",
+          "style": "emom",
+          "durationMin": 12,
+          "name": "EMOM 12",
+          "movements": [
+            "分 1：5 深蹲抓",
+            "分 2：8 箱跳",
+            "分 3：12 卡路里划船"
+          ]
+        }
+      ]
+    }
+  }
+}

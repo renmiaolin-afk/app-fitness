@@ -1,0 +1,46 @@
+<!-- 全局仅允许一个 page-container：关闭时销毁，避免跨页叠两个 -->
+<page-container
+  wx:if="{{show}}"
+  show="{{true}}"
+  round="{{true}}"
+  overlay="{{true}}"
+  position="bottom"
+  close-on-slide-down="{{true}}"
+  z-index="{{1000}}"
+  custom-style="height: 72vh;"
+  bind:clickoverlay="onClose"
+  bind:afterleave="onAfterLeave"
+>
+  <view class="sheet">
+    <view class="grab"></view>
+    <view class="head">
+      <view class="titles">
+        <text class="title">{{media.title}}</text>
+        <text class="sub">动作示范与要点</text>
+      </view>
+      <view class="close" bindtap="onClose">关闭</view>
+    </view>
+
+    <scroll-view scroll-y class="body" show-scrollbar="{{false}}">
+      <view class="section-title">训练要点</view>
+      <view class="cue" wx:for="{{media.cues}}" wx:key="*this">
+        <text class="dot">·</text>
+        <text class="cue-text">{{item}}</text>
+      </view>
+
+      <view class="section-title" style="margin-top: 28rpx;">示范视频</view>
+      <view class="video-card" wx:for="{{media.videos}}" wx:key="title">
+        <text class="video-title">{{item.title}}</text>
+        <video
+          class="video"
+          src="{{item.src}}"
+          controls
+          show-center-play-btn
+          enable-play-gesture
+          object-fit="contain"
+          binderror="onVideoError"
+        ></video>
+      </view>
+    </scroll-view>
+  </view>
+</page-container>

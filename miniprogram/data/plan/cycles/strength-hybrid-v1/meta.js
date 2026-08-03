@@ -1,0 +1,81 @@
+module.exports = {
+  "id": "strength-hybrid-v1",
+  "name": "力量举周期",
+  "planId": "strength-hybrid-mix",
+  "goal": "三大项总和",
+  "principle": "三套独立力量举：挪威 / 线性5×5 / 5/3/1；每周固定肩推专项日（实力推），辅项补背部。辅助嵌入调节日。",
+  "weeks": 4,
+  "optionalTestWeek": 5,
+  "scheduling": {
+    "weekSlotsFile": "../../scheduling/week-slots.json",
+    "doseRulesFile": "../../scheduling/dose-rules.json",
+    "auxiliariesFile": "../../profiles/auxiliaries.json",
+    "defaultAuxiliaries": [
+      "crossfit",
+      "running"
+    ],
+    "note": "七天结构以 week-slots 按辅助组合解析为准；下方 weekTemplate 为挪威主计划+跑+CF 的回退模板"
+  },
+  "weekTemplate": [
+    {
+      "weekday": 1,
+      "key": "squat",
+      "label": "深蹲",
+      "type": "strength"
+    },
+    {
+      "weekday": 2,
+      "key": "bench",
+      "label": "卧推",
+      "type": "strength"
+    },
+    {
+      "weekday": 3,
+      "key": "deadlift",
+      "label": "硬拉",
+      "type": "strength"
+    },
+    {
+      "weekday": 4,
+      "key": "running",
+      "label": "跑",
+      "type": "aux_zone2"
+    },
+    {
+      "weekday": 5,
+      "key": "ohp",
+      "label": "肩推",
+      "type": "strength"
+    },
+    {
+      "weekday": 6,
+      "key": "crossfit",
+      "label": "CF",
+      "type": "aux_high"
+    },
+    {
+      "weekday": 7,
+      "key": "rest",
+      "label": "休",
+      "type": "rest"
+    }
+  ],
+  "phases": {
+    "1": "加重周",
+    "2": "加重周",
+    "3": "维持周",
+    "4": "减量周",
+    "5": "测力周"
+  },
+  "testing": {
+    "policyFile": "testing.json",
+    "weekFilePattern": "weeks/week-05/strength/{strengthTier}.json",
+    "defaultEveryNBlocks": 2,
+    "summary": "训练块内用 e1RM；正式 PR 在减量后的 week-05，默认每 2 块测一次；测力周关闭高强度辅助"
+  },
+  "selection": {
+    "strengthFile": "weeks/week-{nn}/strength/{strengthTier}.json",
+    "cfFile": "weeks/week-{nn}/cf/{cfLevel}.json",
+    "auxSessionHint": "sessions/aux/ 由 week-slots 的 session 字段指向；cfLevel 仍可用于 CF 技能池缩放"
+  }
+}

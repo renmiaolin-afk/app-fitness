@@ -1,0 +1,56 @@
+module.exports = {
+  "id": "running-zone2",
+  "auxId": "running",
+  "name": "跑步",
+  "durationMin": 30,
+  "rpeTarget": [
+    3,
+    5
+  ],
+  "intensity": "zone2",
+  "blocks": [
+    {
+      "name": "热身",
+      "minutes": 5,
+      "distanceKm": 0.6,
+      "cues": [
+        "快走或轻松慢跑",
+        "活动髋踝"
+      ]
+    },
+    {
+      "name": "主段",
+      "minutes": 20,
+      "distanceKm": 3,
+      "cues": [
+        "能完整说句子的强度",
+        "步频放松，不冲刺",
+        "感觉喘不过气就降速"
+      ]
+    },
+    {
+      "name": "收尾",
+      "minutes": 5,
+      "distanceKm": 0.5,
+      "cues": [
+        "降速走",
+        "小腿与髋屈肌拉伸"
+      ]
+    }
+  ],
+  "scaling": {
+    "beginner": {
+      "durationMin": 20
+    },
+    "default": {
+      "durationMin": 30
+    },
+    "cap": {
+      "durationMin": 40
+    }
+  },
+  "substitutes": [
+    "bike_zone2",
+    "row_zone2"
+  ]
+}

@@ -1,0 +1,149 @@
+.analyzing {
+  margin-top: var(--s4);
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s2) 0;
+}
+
+.analyzing-dot {
+  width: 28rpx;
+  height: 28rpx;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.85;
+  flex-shrink: 0;
+}
+
+.analyzing-text {
+  font-size: var(--fs-md);
+  font-weight: 500;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.plan-stack {
+  margin-top: var(--s4);
+  display: flex;
+  flex-direction: column;
+  gap: 28rpx;
+  padding-bottom: var(--s3);
+}
+
+.hero-card {
+  border-radius: 36rpx;
+  padding: 40rpx 36rpx 36rpx;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 3rpx solid transparent;
+}
+
+.hero-card.tone-0 {
+  background: linear-gradient(160deg, #3a3a3c 0%, #1c1c1e 55%, #0a0a0a 100%);
+}
+
+.hero-card.tone-1 {
+  background: linear-gradient(160deg, #2c2c2e 0%, #141414 60%, #000000 100%);
+}
+
+.hero-card.tone-2 {
+  background: linear-gradient(160deg, #242426 0%, #121212 60%, #000000 100%);
+}
+
+.hero-card.selected,
+.hero-card.tone-0.selected,
+.hero-card.tone-1.selected,
+.hero-card.tone-2.selected {
+  border-color: var(--accent);
+  background: linear-gradient(160deg, #5a2030 0%, #2a1018 45%, #12080c 100%);
+}
+
+.hero-name {
+  font-size: 48rpx;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -1rpx;
+  color: #fff;
+}
+
+.hero-intro {
+  margin-top: 24rpx;
+  font-size: var(--fs-md);
+  font-weight: 400;
+  color: rgba(235, 235, 245, 0.55);
+  line-height: 1.5;
+}
+
+.week-row {
+  display: flex;
+  gap: 8rpx;
+  width: 100%;
+  margin-top: 36rpx;
+}
+
+.drag-hint {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+  line-height: 1.4;
+  margin-bottom: 4rpx;
+}
+
+.week-cell {
+  flex: 1 1 0;
+  min-width: 0;
+  border-radius: 14rpx;
+  padding: 12rpx 2rpx 14rpx;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.08);
+  box-sizing: border-box;
+  border: 2rpx solid transparent;
+  transition: transform 0.12s ease, opacity 0.12s ease, border-color 0.12s ease;
+}
+
+.week-cell.train {
+  background: rgba(255, 45, 85, 0.16);
+}
+
+.week-cell.rest {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.week-cell.dragging {
+  transform: scale(1.08);
+  opacity: 0.95;
+  border-color: rgba(255, 255, 255, 0.45);
+  z-index: 2;
+}
+
+.week-cell.drag-over {
+  border-color: var(--accent);
+  background: rgba(255, 45, 85, 0.28);
+}
+
+.wd {
+  display: block;
+  font-size: 20rpx;
+  color: rgba(235, 235, 245, 0.45);
+  line-height: 1.2;
+}
+
+.wl {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 20rpx;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.88);
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.week-cell.train .wl {
+  color: #ff8aa0;
+}
+
+.week-cell.rest .wl {
+  color: rgba(235, 235, 245, 0.35);
+  font-weight: 500;
+}

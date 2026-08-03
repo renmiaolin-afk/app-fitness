@@ -1,0 +1,26 @@
+module.exports = {
+  "week": 4,
+  "phase": "减量周",
+  "inheritFrom": "week-01",
+  "strengthDelta": {
+    "main": {
+      "beginner": {
+        "percentOf1rmDelta": -0.05,
+        "setsDelta": -1
+      },
+      "intermediate": {
+        "percentOf1rmDelta": -0.05,
+        "setsDelta": -1
+      },
+      "advanced": {
+        "percentOf1rmDelta": -0.08,
+        "setsDelta": -1,
+        "note": "强度与容量双降，为下一周期做准备"
+      }
+    },
+    "accessories": "只保留 1–2 个轻辅助"
+  },
+  "cfDelta": {
+    "note": "本周 CF 可改为短技能 + 轻 Metcon，或其中一次改主动恢复"
+  }
+}

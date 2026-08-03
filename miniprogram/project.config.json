@@ -1,0 +1,20 @@
+{
+  "description": "若开发者工具导入的是 miniprogram 目录，用此配置",
+  "packOptions": {
+    "ignore": [],
+    "include": []
+  },
+  "setting": {
+    "es6": true,
+    "postcss": true,
+    "minified": true,
+    "enhance": false,
+    "compileHotReLoad": true,
+    "urlCheck": true
+  },
+  "compileType": "miniprogram",
+  "libVersion": "3.5.5",
+  "appid": "wx202c613a65bd136a",
+  "projectname": "app-fitness",
+  "condition": {}
+}

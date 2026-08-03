@@ -1,0 +1,73 @@
+<view class="page safe-bottom" style="padding-top: {{navPadTop}}px;" wx:if="{{ready}}">
+  <view class="nav">
+    <view class="nav-back" bindtap="goBack" aria-role="button" aria-label="返回">
+      <text class="nav-back-chev">‹</text>
+    </view>
+  </view>
+
+  <view class="intro">
+    <view class="intro-name">{{cycleName}}</view>
+
+    <view class="fact">
+      <text class="fact-k">目标</text>
+      <text class="fact-v">{{goalTarget}}</text>
+      <text class="fact-v sub" wx:if="{{goalHint}}">{{goalHint}}</text>
+    </view>
+  </view>
+
+  <view class="week {{item.current ? 'on' : ''}}" wx:for="{{weeks}}" wx:key="week">
+    <view class="week-h">
+      <text class="week-t">{{item.head}}</text>
+      <text class="week-tag" wx:if="{{item.current}}">进行中</text>
+    </view>
+
+    <view class="day {{day.kind}}" wx:for="{{item.days}}" wx:for-item="day" wx:key="dayLabel">
+      <text class="wd">{{day.dayLabel}}</text>
+      <view class="body">
+        <block wx:if="{{day.kind === 'strength'}}">
+          <text class="sec-label">主项</text>
+          <view class="main-row">
+            <text class="t">{{day.mainName}}</text>
+            <text class="sets">{{day.mainSets}}</text>
+          </view>
+          <block wx:if="{{day.accessories.length}}">
+            <text class="sec-label acc">辅项</text>
+            <view class="acc-row" wx:for="{{day.accessories}}" wx:for-item="acc" wx:key="name">
+              <text class="acc-n">{{acc.name}}</text>
+              <text class="acc-s">{{acc.setsText}}</text>
+            </view>
+          </block>
+        </block>
+        <block wx:elif="{{day.kind === 'rest'}}">
+          <text class="sec-label">休息</text>
+          <text class="t muted">{{day.mainName}}</text>
+        </block>
+        <block wx:elif="{{day.layout === 'main-wod'}}">
+          <text class="sec-label">主项</text>
+          <view class="main-row">
+            <text class="t">{{day.mainName}}</text>
+            <text class="sets" wx:if="{{day.mainSets}}">{{day.mainSets}}</text>
+          </view>
+          <block wx:if="{{day.accessories.length}}">
+            <text class="sec-label acc">辅项 · WOD</text>
+            <view class="acc-row" wx:for="{{day.accessories}}" wx:for-item="acc" wx:key="name">
+              <text class="acc-n">{{acc.name}}</text>
+              <text class="acc-s">{{acc.setsText}}</text>
+            </view>
+          </block>
+        </block>
+        <block wx:else>
+          <text class="sec-label">调节</text>
+          <view class="main-row">
+            <text class="t">{{day.mainName}}</text>
+            <text class="sets" wx:if="{{day.mainSets}}">{{day.mainSets}}</text>
+          </view>
+          <view class="acc-row" wx:for="{{day.accessories}}" wx:for-item="acc" wx:key="name">
+            <text class="acc-n">{{acc.name}}</text>
+            <text class="acc-s">{{acc.setsText}}</text>
+          </view>
+        </block>
+      </view>
+    </view>
+  </view>
+</view>

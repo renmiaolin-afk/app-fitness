@@ -1,0 +1,27 @@
+<ambient-glow />
+<view class="page page-dock">
+  <scroll-view scroll-y class="page-scroll" enhanced="{{true}}" show-scrollbar="{{false}}" enable-flex="{{true}}">
+    <view class="page-title">训练完成</view>
+    <view class="page-sub">{{name}} · 用时 {{durationMin}} 分钟 · 已自动保存</view>
+
+    <view class="card score" style="margin-top: 32rpx;">
+      <view class="sec">评分</view>
+      <view class="row">
+        <text class="num">{{score}}</text>
+        <text class="msg">质量不错，组间也稳住了</text>
+      </view>
+    </view>
+
+    <view class="card" wx:if="{{hasSets}}">
+      <view class="sec">{{name}}</view>
+      <view class="set" wx:for="{{sets}}" wx:key="index">
+        <text>{{item.title}}</text>
+        <text class="kg">{{item.detail}}</text>
+      </view>
+    </view>
+  </scroll-view>
+
+  <view class="footer">
+    <button class="btn-primary" bindtap="backToday">回到今日</button>
+  </view>
+</view>

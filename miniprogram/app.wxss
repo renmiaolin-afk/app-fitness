@@ -1,0 +1,225 @@
+page {
+  height: 100%;
+  /* iOS Dark — system colors */
+  --accent: #ff2d55;
+  --accent-2: #ff453a;
+  --accent-soft: rgba(255, 45, 85, 0.18);
+  /* systemBackground → secondarySystemGroupedBackground → tertiary */
+  --bg: #000000;
+  /* 卡片底 50% 不透明度 */
+  --card: rgba(28, 28, 30, 0.5);
+  --chip: #2c2c2e;
+  --fill: rgba(120, 120, 128, 0.24);
+  --text: #ffffff;
+  --muted: rgba(235, 235, 245, 0.6);
+  --line: rgba(84, 84, 88, 0.65);
+  --dark: #000000;
+  --dark-elev: #1c1c1e;
+  --dark-chip: #2c2c2e;
+  --dark-muted: rgba(235, 235, 245, 0.4);
+  --fill-secondary: #2c2c2e;
+  --label-tertiary: rgba(235, 235, 245, 0.3);
+  --grad-accent: linear-gradient(135deg, #ff2d55 0%, #ff453a 100%);
+
+  /* type: 5 — 含 iOS Large Title */
+  --fs-sm: 24rpx;
+  --fs-md: 28rpx;
+  --fs-lg: 40rpx;
+  --fs-title: 68rpx;
+  --fs-xl: 112rpx;
+
+  /* space: 4 */
+  --s1: 10rpx;
+  --s2: 20rpx;
+  --s3: 32rpx;
+  --s4: 44rpx;
+
+  /* radius — card ≈ 10pt continuous */
+  --r-sm: 12rpx;
+  --r-md: 16rpx;
+  --r-lg: 20rpx;
+  --r-xl: 20rpx;
+  --r-card: 20rpx;
+
+  /* button：文案内边距 ≥ 24px → 48rpx */
+  --btn-h: 96rpx;
+  --btn-r: 48rpx;
+  --btn-pad-x: 48rpx;
+  --btn-pad-y: 24rpx;
+
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica,
+    'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-size: var(--fs-md);
+  box-sizing: border-box;
+}
+
+view,
+text,
+button {
+  box-sizing: border-box;
+}
+
+.page {
+  position: relative;
+  z-index: 1;
+  min-height: 100%;
+  /* 沉浸式：避让状态栏/胶囊，标题再下移；有 navPadTop 的页会用行内样式覆盖 top */
+  padding: calc(env(safe-area-inset-top, 20px) + 48px + 100rpx) 32rpx 0;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+  box-sizing: border-box;
+}
+
+/* 有底部主按钮：内容区滚动，按钮贴底 */
+.page-dock {
+  height: 100%;
+  overflow: hidden;
+}
+
+.page-scroll {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  background: transparent;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* iOS Large Title */
+.page-title {
+  font-size: var(--fs-title);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.5rpx;
+  color: var(--text);
+}
+
+.page-sub {
+  margin-top: var(--s1);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.card {
+  background: var(--card);
+  border-radius: var(--r-card);
+  padding: 28rpx 32rpx;
+  margin-bottom: 24rpx;
+}
+
+.card-label {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: var(--s1);
+}
+
+.card-hint {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+  margin-bottom: var(--s3);
+  line-height: 1.4;
+}
+
+.btn-primary {
+  width: 100%;
+  min-height: var(--btn-h);
+  height: auto;
+  border-radius: var(--btn-r);
+  background: var(--accent);
+  background-image: var(--grad-accent);
+  color: #fff;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--btn-pad-y) var(--btn-pad-x);
+  margin: 0;
+  border: none;
+  line-height: 1.2;
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+
+.btn-primary::after {
+  border: none;
+}
+
+.btn-outline {
+  width: 100%;
+  min-height: var(--btn-h);
+  height: auto;
+  border-radius: var(--btn-r);
+  background: transparent;
+  color: var(--accent);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2rpx solid var(--accent);
+  padding: var(--btn-pad-y) var(--btn-pad-x);
+  margin: 0;
+  line-height: 1.2;
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+
+.btn-outline::after {
+  border: none;
+}
+
+.btn-link {
+  margin-top: var(--s2);
+  text-align: center;
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  padding: var(--s1) 0 var(--s3);
+}
+
+.footer {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  margin-top: auto;
+  padding: var(--s3) 0 calc(var(--s2) + env(safe-area-inset-bottom));
+  background: var(--bg);
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+
+.chip {
+  padding: var(--s2) var(--s3);
+  border-radius: var(--r-md);
+  background: var(--fill);
+  color: var(--text);
+  font-size: var(--fs-md);
+  font-weight: 500;
+}
+
+.chip.active {
+  background: var(--accent);
+  background-image: var(--grad-accent);
+  color: #fff;
+}
+
+.chip-equal {
+  flex: 1;
+  text-align: center;
+  padding: var(--s2) var(--s1);
+}
+
+.safe-bottom {
+  padding-bottom: calc(var(--s3) + env(safe-area-inset-bottom));
+}

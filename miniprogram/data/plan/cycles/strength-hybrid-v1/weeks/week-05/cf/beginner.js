@@ -1,0 +1,25 @@
+module.exports = {
+  "cycleId": "strength-hybrid-v1",
+  "week": 5,
+  "cfLevel": "beginner",
+  "format": "off",
+  "note": "测力周关闭正式 CF 课",
+  "sessions": {
+    "thu": {
+      "cfIndex": 1,
+      "title": "CF 关闭",
+      "subtitle": "测力周不练 CF",
+      "durationMin": 0,
+      "intensityNote": "休息或活动度即可",
+      "blocks": []
+    },
+    "sat": {
+      "cfIndex": 2,
+      "title": "CF 关闭",
+      "subtitle": "测力周不练 CF",
+      "durationMin": 0,
+      "intensityNote": "休息或轻松走动",
+      "blocks": []
+    }
+  }
+}

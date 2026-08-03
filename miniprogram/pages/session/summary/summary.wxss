@@ -1,0 +1,41 @@
+.sec {
+  font-size: var(--fs-md);
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.score .row {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  margin-top: var(--s2);
+}
+
+.num {
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.msg {
+  color: #34c759;
+  font-size: var(--fs-md);
+  font-weight: 500;
+}
+
+.set {
+  display: flex;
+  justify-content: space-between;
+  padding: 14rpx 0;
+  font-size: var(--fs-md);
+}
+
+.set:first-of-type {
+  margin-top: var(--s2);
+}
+
+.set .kg {
+  color: var(--accent);
+  font-weight: 600;
+}

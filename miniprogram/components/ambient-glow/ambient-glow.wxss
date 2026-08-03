@@ -1,0 +1,64 @@
+/* absolute 相对页面，避免 fixed 被 page-dock overflow 裁掉 */
+.ambient {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 100vw;
+  height: 520rpx;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.blob.a {
+  width: 140%;
+  height: 90%;
+  left: -25%;
+  top: -40%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 45, 85, 0.55) 0%,
+    rgba(255, 69, 58, 0.22) 36%,
+    transparent 70%
+  );
+  animation: glow-breathe-a 22s ease-in-out infinite alternate;
+}
+
+.blob.b {
+  width: 100%;
+  height: 60%;
+  right: -30%;
+  left: auto;
+  top: -20%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 110, 50, 0.28) 0%,
+    transparent 65%
+  );
+  animation: glow-breathe-b 28s ease-in-out infinite alternate;
+}
+
+@keyframes glow-breathe-a {
+  0% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes glow-breathe-b {
+  0% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 0.85;
+  }
+}

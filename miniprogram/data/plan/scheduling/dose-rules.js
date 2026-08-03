@@ -1,0 +1,50 @@
+module.exports = {
+  "version": 1,
+  "description": "力量主线 + 辅助剂量上限。供推荐计划与周历生成共用。",
+  "strengthPrimary": {
+    "sessionsPerWeek": [
+      3,
+      4
+    ],
+    "durationMin": [
+      45,
+      65
+    ],
+    "rule": "力量课不可被辅助挤掉；同日若必须叠加，先力量后辅助"
+  },
+  "auxiliaries": {
+    "high_mixed": {
+      "maxPerWeek": 1,
+      "durationMin": [
+        12,
+        35
+      ],
+      "rpeCap": 7,
+      "minHoursFromHeavyLower": 24
+    },
+    "zone2_endurance": {
+      "maxPerWeek": 2,
+      "durationMin": [
+        20,
+        40
+      ],
+      "weeklyCapMin": 90,
+      "intensity": "zone2_conversational"
+    }
+  },
+  "concurrent": {
+    "preferSeparateDays": true,
+    "sameDayOrder": [
+      "strength",
+      "aux"
+    ],
+    "minGapHoursSameDay": 6,
+    "preferredGapHours": 24,
+    "source": "Stronger by Science concurrent training guidance"
+  },
+  "testingWeek": {
+    "disableHighMixed": true,
+    "allowZone2Easy": true,
+    "note": "测力周关闭 CF/Hyrox 高强度；可选极轻松有氧"
+  }
+}

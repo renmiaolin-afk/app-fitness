@@ -1,66 +1,97 @@
 # 训练计划数据
 
-按「训练周期 × 能力档案」组织力量与 CF 计划。产品建档后，用档案字段匹配对应 JSON，生成当周今日计划。
+按「推荐计划 × 辅助组合 × 力量档」生成周历与今日课。力量举为主线；CrossFit / Hyrox / 跑步最多选 2 项，嵌入调节日。
 
-## 匹配规则
+## 匹配规则（现行）
 
 ```text
 建档
-├── strengthTier: beginner | intermediate | advanced   （新手 / 进阶 / 较强）
-├── cfLevel:      beginner | intermediate | advanced   （初级 / 中级 / 高级）
-└── 1RM（深蹲 / 卧推 / 硬拉）→ 用于把 percentOf1rm 换成今日公斤数
+├── strengthTier: beginner | intermediate | advanced
+├── 1RM（深蹲 / 卧推 / 硬拉）
+├── auxiliaries: ["crossfit" | "hyrox" | "running"]  （≤2）
+└── planId: strength-hybrid-mix | strength-linear | strength-time-efficient
 
-今日计划 =
+组合 key = sort(auxiliaries).join("+") 或 none
+
+周历 =
+  scheduling/week-slots.json → plans[planId].combinations[key]
+
+力量日内容 =
   cycles/{cycleId}/weeks/week-XX/strength/{strengthTier}.json
-  + cycles/{cycleId}/weeks/week-XX/cf/{cfLevel}.json
+
+辅助日内容 =
+  sessions/aux/{running-zone2|crossfit-short-metcon|hyrox-stations}.json
+
+（可选）CF 技能缩放 =
+  profiles/cf-levels.json + 旧 cf/{level}.json（兼容）
 ```
 
-重量优先用用户真实 1RM × `load.percentOf1rm`；若无 1RM，回退到档案默认示例重量 `exampleKg`。
+重量：用户真实 1RM × `load.percentOf1rm`；无 1RM 时回退 `exampleKg`。
 
-力量档与 CF 档**独立匹配**：例如力量「较强」+ CF「中级」是合法组合（原型默认档案）。
+## 力量课必练（背 / 肩）
+
+每周训练周（week 1–4）除三大项外，必须覆盖：
+
+| 动作 | 默认日 | 槽位 |
+|---|---|---|
+| **实力推** | 五 · 上推日 | `main`（严格站姿推举） |
+| **潘德勒划船** | 二 · 卧推日 | `secondary` |
+| **引体向上** | 三 · 硬拉日（进阶/较强周五再加一次） | `secondary` |
+
+定义见 `profiles/required-movements.json`。新手引体可用弹力带或反向划船替代（见 `scalingNote`）。
 
 ## 目录
 
 | 路径 | 说明 |
 |---|---|
-| `profiles/` | 能力档定义与默认 1RM / 技能池 |
-| `cycles/strength-hybrid-v1/` | 力量优先混合周期（当前产品默认） |
-| `cycles/.../weeks/week-01~04/` | 四周完整力量三档 + CF 三档 |
-| `cycles/.../weeks/week-05/` | **测力周**（可选，减量后插入） |
-| `cycles/.../testing.json` | 正式 PR / 测力规则 |
-| `cycles/.../weeks/week-XX/progression.json` | 该周相对 week-01 的推进规则说明 |
+| `profiles/auxiliaries.json` | 三项辅助定义、剂量与冲突规则 |
+| `profiles/strength-tiers.json` | 力量档与默认 1RM |
+| `profiles/cf-levels.json` | CF 技能池（兼容旧数据） |
+| `scheduling/week-slots.json` | **计划 × 辅助组合 → 七天槽位** |
+| `scheduling/dose-rules.json` | 并发训练剂量上限 |
+| `scheduling/README.md` | 解析伪代码与示例 |
+| `sessions/aux/` | 跑步 / CF / Hyrox 调节日模板 |
+| `cycles/strength-hybrid-v1/` | 力量课处方（按周 × 力量档） |
 
-## 周结构（七天 · 训练周）
+## 三套推荐计划（与设计稿对齐）
 
-| 一 | 二 | 三 | 四 | 五 | 六 | 日 |
-|---|---|---|---|---|---|---|
-| 深蹲 | 卧推 | 硬拉 | CF | 上推 | CF | 休 |
+| planId | 名称 | 默认策略（选 CF+跑步时） |
+|---|---|---|
+| `strength-hybrid-mix` | 挪威力训计划 | 蹲/卧/拉/跑/上推/CF/休（4×4/2×2/1×8） |
+| `strength-linear` | 线性 5×5 计划 | 力量优先；跑步作恢复，CF 暂缓 |
+| `strength-time-efficient` | 5/3/1 力量计划 | 蹲/上肢/拉/CF/休/跑/休 |
 
-CF 一周两次，采用馆课三段式：技能 → 力量 → Metcon。
+## 剂量红线
 
-## 相位与测力
+| 模块 | 上限 |
+|---|---|
+| 力量主课 | 3–4 次/周 |
+| 高强度辅（CF 或 Hyrox） | ≤1 次/周 |
+| 跑步 Zone2 | 1–2 次/周，单次 20–40 分 |
+| CF+Hyrox 同选 | 高强度槽仍只留 1 个 |
 
-| 周 | 相位 | 力量 | CF |
+同日若叠加：先力量后辅助；高强度辅与深蹲/硬拉尽量间隔 ≥24h。测力周关闭高强度辅助。
+
+## 相位与测力（力量块）
+
+| 周 | 相位 | 力量 | 辅助 |
 |---|---|---|---|
-| 1 | 加重周 | 基线处方 | 完整三段式 ×2 |
-| 2 | 加重周 | 主项 %1RM 微升 | 换 Metcon 刺激 |
-| 3 | 维持周 | 强度略升 / 可砍辅助 | Metcon 略收 |
-| 4 | 减量周 | 强度与组数双降 | 短课或主动恢复 |
-| 5 | **测力周**（可选） | 一深蹲 / 二卧推 / 三硬拉正式测 | **关闭**正式 CF |
+| 1–2 | 加重 | 基线→微升 | 按 week-slots |
+| 3 | 维持 | 强度略升 | 可略收 Metcon |
+| 4 | 减量 | 强度与组数双降 | 短课或轻松跑 |
+| 5 | 测力（可选） | 一蹲 / 二卧 / 三拉 | 高强度辅关闭 |
 
-**测力规则（写入 `testing.json`）：**
+详见 `cycles/strength-hybrid-v1/testing.json`。
 
-- 第 1–4 周：**不**正式测 1RM，用工作组推 e1RM
-- 正式 PR：减量结束后的 `week-05`
-- 默认 **每 2 个训练块**（约 8–12 周）测一次；恢复差可顺延
-- 测力周：一测深蹲、二测卧推、三测硬拉；四～日休息；不做 Metcon
-- 按力量档：新手 3–5RM、进阶重单/3RM、较强最多 3 次 1RM 试举
-- 测完更新档案 1RM，再开下一轮第 1 周
-
-## 示例：原型用户（较强力量 + 中级 CF）
+## 示例：原型用户
 
 ```text
-week-01/strength/advanced.json   → 深蹲 3×4 @ ~155
-week-01/cf/intermediate.json     → 双力臂 / 高翻 / 21-15-9 抓举+引体
-week-05/strength/advanced.json   → 测力周 1RM 试举（每 2 块一次）
+planId: strength-hybrid-mix
+auxiliaries: ["crossfit", "running"]  → key = crossfit+running
+strengthTier: advanced
+
+周历标签: 深蹲 / 卧推 / 硬拉 / 跑 / 上推 / CF / 休
+力量日: week-01/strength/advanced.json
+跑日:   sessions/aux/running-zone2.json
+CF日:   sessions/aux/crossfit-short-metcon.json
 ```

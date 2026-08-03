@@ -1,14 +1,59 @@
 # app-fitness
 
-力量训练产品设计与原型仓库。
+力量训练产品：设计稿 + 计划数据 + **原生微信小程序**。
 
 ## 仓库结构
 
 | 路径 | 说明 |
 |---|---|
-| `docs/design/strength-training.pen` | Pencil 设计稿 |
-| `plans/` | **训练计划数据**（按周期 × 能力档案） |
+| `miniprogram/` | 原生微信小程序（可运行 MVP） |
+| `cloudfunctions/` | 微信云开发云函数 |
+| `docs/design/fitness new.pen` | Pencil 设计稿 |
+| `docs/design/interaction.md` | 交互说明 |
+| `plans/` | 训练计划数据（真源） |
+| `scripts/sync-plans-to-mp.sh` | 同步 `plans/` → 小程序包内 |
 | `scripts/sync-design.sh` | 设计稿同步脚本 |
+
+### 云开发（个性化推荐）
+
+环境 ID：`cloud1-d5g1vbk2ibf89c107`（见 `miniprogram/config/cloud.js`）
+
+1. 开发者工具打开**仓库根目录**（需识别 `cloudfunctionRoot`）
+2. 开通云开发并选中上述环境
+3. 在 `cloudfunctions/recommendPlans` 上右键 → **上传并部署：云端安装依赖**
+4. 重新编译小程序；建档到「推荐计划」时应出现「正在匹配…」，再显示云端排序结果
+5. 若云函数未部署，会自动走本地同规则兜底，并 toast「已用离线推荐」
+
+## 微信小程序（原生）
+
+### 打开方式
+
+1. 安装 [微信开发者工具](https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html)
+2. **二选一导入**（推荐 A）：
+   - **A.** 导入仓库根目录 `app-fitness`（根目录有 `project.config.json`，`miniprogramRoot` 指向 `miniprogram/`）
+   - **B.** 直接导入 `app-fitness/miniprogram` 目录
+3. AppID：`wx202c613a65bd136a`
+4. 若模拟器空白：点菜单 **清缓存 → 全部清除**，再点 **编译**
+5. 正常流程：**建档 → 推荐计划 → 今日 → 开练 → 力量/辅助训练 → 总结**
+
+### 已打通
+
+- 建档（能力 / 习惯 / 选计划），本地 `Storage` 持久化
+- 今日周历（读 `week-slots` + week-01 力量档 + 辅助 session）
+- 开练确认（含疲劳自动建议）
+- 力量训练：待开始 / 计时 / 暂停 / 组间 / 退出保存 / 恢复
+- 跑步·CF 辅助日：分段计时
+- 课次总结 → 回到今日；「我的」查看档案
+
+### 同步计划数据
+
+改完根目录 `plans/` 后执行：
+
+```bash
+./scripts/sync-plans-to-mp.sh
+```
+
+微信小程序不能直接 `require('.json')`，脚本会把数据转成 `miniprogram/data/plan/**/*.js`（`module.exports = …`）再给业务引用。
 
 ## 训练计划（按能力档案）
 

@@ -1,0 +1,25 @@
+{
+  "pages": [
+    "pages/today/today",
+    "pages/me/me",
+    "pages/cycle/cycle",
+    "pages/onboarding/ability/ability",
+    "pages/onboarding/habits/habits",
+    "pages/onboarding/plans/plans",
+    "pages/session/ready/ready",
+    "pages/session/train/train",
+    "pages/session/aux/aux",
+    "pages/session/summary/summary",
+    "pages/index/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "Fitness",
+    "navigationBarBackgroundColor": "#000000",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#000000",
+    "backgroundTextStyle": "light",
+    "navigationStyle": "custom"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

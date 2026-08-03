@@ -1,0 +1,470 @@
+/* 保证光效在内容之下可见 */
+.page.page-dock {
+  background: transparent;
+}
+
+/* 顶部红色氛围光（写在页面内，避免组件 fixed/宿主定位失效） */
+.ambient-glow {
+  position: absolute;
+  left: -32rpx;
+  right: -32rpx;
+  top: 0;
+  height: 520rpx;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.ambient-blob {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.ambient-blob.a {
+  width: 140%;
+  height: 90%;
+  left: -25%;
+  top: -40%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 45, 85, 0.28) 0%,
+    rgba(255, 69, 58, 0.1) 36%,
+    transparent 70%
+  );
+  animation: today-glow-a 22s ease-in-out infinite alternate;
+}
+
+.ambient-blob.b {
+  width: 100%;
+  height: 60%;
+  right: -30%;
+  left: auto;
+  top: -20%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 110, 50, 0.12) 0%,
+    transparent 65%
+  );
+  animation: today-glow-b 28s ease-in-out infinite alternate;
+}
+
+@keyframes today-glow-a {
+  0% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes today-glow-b {
+  0% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0.55;
+  }
+}
+
+.header {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--s4);
+  gap: var(--s3);
+}
+
+.header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.avatar {
+  width: 68rpx;
+  height: 68rpx;
+  border-radius: 50%;
+  background: var(--card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.avatar.has-photo {
+  background: transparent;
+}
+
+.avatar-img.filled {
+  width: 68rpx;
+  height: 68rpx;
+  border-radius: 50%;
+  display: block;
+}
+
+.avatar-img.placeholder {
+  width: 36rpx;
+  height: 36rpx;
+}
+
+/* 内容区宽 ÷ 7；内侧留白承接 skew 斜边，避免首尾被裁 */
+.week-tabs {
+  display: flex;
+  flex-direction: row;
+  gap: 0;
+  margin-bottom: var(--s4);
+  width: 100%;
+  padding: 0 12rpx;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+.tab {
+  position: relative;
+  flex: 0 0 calc(100% / 7);
+  width: calc(100% / 7);
+  max-width: calc(100% / 7);
+  min-width: 0;
+  box-sizing: border-box;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s2) 0;
+  text-align: left;
+  background: transparent;
+  overflow: visible;
+}
+
+/* 选中背景：skewX 保证左右倾角完全一致 */
+.tab-pill {
+  position: absolute;
+  left: 50%;
+  top: calc(50% + 6rpx);
+  width: 82%;
+  height: 78%;
+  min-height: 64rpx;
+  transform: translate(-50%, -50%) skewX(-12deg);
+  transform-origin: center center;
+  border-radius: 0;
+  background: linear-gradient(180deg, #000000 0%, #1a0508 28%, #ff2d55 100%);
+  opacity: 0;
+  z-index: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.tab.active .tab-pill {
+  opacity: 1;
+}
+
+/* 星期 + 训练名成组：组内左对齐，整组在背景内居中 */
+.tab-group {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  width: auto;
+  max-width: 88%;
+}
+
+.tab .d,
+.tab .l {
+  display: block;
+  width: auto;
+  box-sizing: border-box;
+  text-align: left;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: visible;
+}
+
+.tab .d {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--muted);
+  line-height: 1.2;
+  transition: color 0.2s ease;
+}
+
+.tab .l {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+  color: var(--label-tertiary);
+  line-height: 1.2;
+  transition: color 0.2s ease;
+}
+
+.tab.active .d,
+.tab.active .l {
+  color: #fff;
+  text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.25);
+}
+
+.tab.active .d {
+  font-weight: 700;
+  font-style: italic;
+}
+
+.body-adjust {
+  margin-bottom: 24rpx;
+}
+
+.body-adjust-label {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: var(--s2);
+}
+
+.body-adjust-note {
+  margin-top: var(--s2);
+  font-size: var(--fs-sm);
+  color: var(--accent);
+  line-height: 1.4;
+}
+
+.plan-card {
+  background: transparent;
+  margin-bottom: 24rpx;
+}
+
+.card-top {
+  padding: 0;
+}
+
+.sec-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+  gap: var(--s2);
+}
+
+.sec-label {
+  font-size: 22rpx;
+  font-weight: 600;
+  letter-spacing: 3rpx;
+  color: rgba(235, 235, 245, 0.55);
+}
+
+.status-chip {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: var(--s1) var(--s2);
+  border-radius: var(--r-sm);
+  flex-shrink: 0;
+  align-self: center;
+  line-height: 1.2;
+}
+
+.sec-head .status-chip {
+  margin-left: auto;
+}
+
+.main-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.main-left {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4rpx;
+  min-width: 0;
+  flex: 1;
+}
+
+.main-name {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--text);
+}
+
+.main-sets {
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--accent);
+  flex-shrink: 0;
+  text-align: right;
+  max-width: 46%;
+  line-height: 1.35;
+}
+
+/* 左重量图 · 中动作/内容 · 右组数 */
+.set-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.set-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20rpx;
+  padding: 12rpx 0;
+  border-radius: 0;
+  background: transparent;
+  box-sizing: border-box;
+}
+
+.kg-plate {
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: 20rpx;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 35% 30%, #3a3a3c 0%, #1c1c1e 55%, #0a0a0a 100%);
+  border: none;
+  box-sizing: border-box;
+}
+
+.kg-plate-num {
+  font-size: 36rpx;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.5rpx;
+  text-align: center;
+  max-width: 100%;
+  padding: 0 4rpx;
+}
+
+.kg-plate.body .kg-plate-num {
+  font-size: 26rpx;
+}
+
+.kg-plate-unit {
+  margin-top: 2rpx;
+  font-size: 20rpx;
+  font-weight: 600;
+  color: rgba(235, 235, 245, 0.4);
+  line-height: 1;
+}
+
+.set-card-mid {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.set-card-top {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12rpx;
+  min-width: 0;
+}
+
+.set-card-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.set-card-detail {
+  font-size: 24rpx;
+  font-weight: 500;
+  color: rgba(235, 235, 245, 0.45);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.set-card-sets {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: flex-end;
+  min-width: 64rpx;
+  gap: 4rpx;
+}
+
+.sets-num {
+  font-size: 36rpx;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.sets-label {
+  font-size: 22rpx;
+  font-weight: 600;
+  color: rgba(235, 235, 245, 0.35);
+  line-height: 1;
+}
+
+.sec-gap {
+  margin-top: var(--s4);
+}
+
+.acc-label {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  margin-bottom: var(--s2);
+}
+
+.acc {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--s3) 0;
+}
+
+.acc-text {
+  flex: 1;
+  min-width: 0;
+  padding-right: var(--s2);
+}
+
+.acc-name {
+  display: block;
+  color: var(--text);
+  font-size: var(--fs-md);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.acc-detail {
+  display: block;
+  margin-top: 6rpx;
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+}
+
+.acc-sets {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  flex-shrink: 0;
+}

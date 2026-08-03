@@ -1,0 +1,213 @@
+module.exports = {
+  "cycleId": "strength-hybrid-v1",
+  "week": 3,
+  "phase": "维持周",
+  "strengthTier": "intermediate",
+  "days": {
+    "mon": {
+      "type": "strength",
+      "theme": "深蹲 · 下肢",
+      "main": {
+        "name": "深蹲",
+        "tag": "必练",
+        "sets": 4,
+        "reps": 4,
+        "load": {
+          "type": "percent_1rm",
+          "percentOf1rm": 0.84
+        },
+        "exampleKg": 115.5,
+        "restSec": 240
+      },
+      "accessories": [
+        {
+          "name": "罗马尼亚硬拉",
+          "sets": 3,
+          "reps": 8
+        },
+        {
+          "name": "腿举",
+          "sets": 3,
+          "reps": 10
+        }
+      ],
+      "accessoryNote": "维持周可砍 1 个辅助",
+      "focus": [
+        "squat",
+        "legs"
+      ]
+    },
+    "tue": {
+      "type": "strength",
+      "theme": "卧推 · 背部",
+      "main": {
+        "name": "卧推",
+        "tag": "必练",
+        "sets": 4,
+        "reps": 4,
+        "load": {
+          "type": "percent_1rm",
+          "percentOf1rm": 0.84
+        },
+        "exampleKg": 84.0,
+        "restSec": 210
+      },
+      "accessories": [
+        {
+          "name": "绳索面拉",
+          "sets": 3,
+          "reps": 12,
+          "region": "shoulder"
+        },
+        {
+          "name": "绳索三头下压",
+          "sets": 3,
+          "reps": 12
+        }
+      ],
+      "accessoryNote": "潘德勒划船为背部必练，紧接卧推后做",
+      "focus": [
+        "bench",
+        "back"
+      ],
+      "secondary": {
+        "name": "潘德勒划船",
+        "tag": "必练",
+        "movementId": "pendlay_row",
+        "region": "back",
+        "sets": 3,
+        "reps": 6,
+        "restSec": 120,
+        "cues": [
+          "每一下地板停稳再拉",
+          "躯干接近水平",
+          "不借甩"
+        ]
+      }
+    },
+    "wed": {
+      "type": "strength",
+      "theme": "硬拉 · 背部",
+      "main": {
+        "name": "硬拉",
+        "tag": "必练",
+        "sets": 3,
+        "reps": 4,
+        "load": {
+          "type": "percent_1rm",
+          "percentOf1rm": 0.84
+        },
+        "exampleKg": 142.5,
+        "restSec": 240
+      },
+      "accessories": [
+        {
+          "name": "杠铃臀推",
+          "sets": 3,
+          "reps": 8
+        },
+        {
+          "name": "悬垂举腿",
+          "sets": 2,
+          "reps": 12
+        }
+      ],
+      "accessoryNote": "引体向上为背部必练；做不了严格引体见 scalingNote",
+      "focus": [
+        "deadlift",
+        "back"
+      ],
+      "secondary": {
+        "name": "引体向上",
+        "tag": "必练",
+        "movementId": "pullup",
+        "region": "back",
+        "sets": 3,
+        "reps": 8,
+        "restSec": 120,
+        "cues": [
+          "完整幅度",
+          "控制下放"
+        ],
+        "scalingNote": "下巴过杆，严格离心"
+      }
+    },
+    "fri": {
+      "type": "strength",
+      "theme": "实力推 · 肩部",
+      "main": {
+        "name": "实力推",
+        "tag": "必练",
+        "sets": 4,
+        "reps": 5,
+        "load": {
+          "type": "percent_bench_1rm",
+          "percentOf1rm": 0.59
+        },
+        "exampleKg": 59.0,
+        "restSec": 180,
+        "movementId": "strict_press",
+        "region": "shoulder",
+        "cues": [
+          "严格站姿，不借腿",
+          "杠至锁定过头顶",
+          "核心收紧"
+        ]
+      },
+      "accessories": [
+        {
+          "name": "哑铃侧平举",
+          "sets": 3,
+          "reps": 12,
+          "region": "shoulder"
+        },
+        {
+          "name": "绳索面拉",
+          "sets": 3,
+          "reps": 12,
+          "region": "shoulder"
+        },
+        {
+          "name": "二头弯举",
+          "sets": 2,
+          "reps": 12
+        }
+      ],
+      "accessoryNote": "实力推为肩部必练主项；侧平举/面拉补齐肩部",
+      "focus": [
+        "shoulder",
+        "press"
+      ],
+      "secondary": {
+        "name": "引体向上",
+        "tag": "必练",
+        "movementId": "pullup",
+        "region": "back",
+        "sets": 2,
+        "reps": 8,
+        "restSec": 90,
+        "scalingNote": "下巴过杆，严格离心"
+      }
+    },
+    "sun": {
+      "type": "rest",
+      "theme": "休息",
+      "note": "走动或活动度即可"
+    }
+  },
+  "derivedFrom": "week-01",
+  "note": "由 week-01 按 progression 生成（维持周）",
+  "requiredMovements": [
+    "pendlay_row",
+    "pullup",
+    "strict_press"
+  ],
+  "backShoulderPolicy": {
+    "weeklyMust": [
+      "实力推",
+      "引体向上",
+      "潘德勒划船"
+    ],
+    "profile": "profiles/required-movements.json"
+  }
+}

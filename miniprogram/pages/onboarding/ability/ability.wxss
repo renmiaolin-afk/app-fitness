@@ -1,0 +1,103 @@
+.gender-row {
+  display: flex;
+  gap: var(--s2);
+  margin-top: var(--s1);
+}
+
+.gender {
+  flex: 1;
+  height: 80rpx;
+  border-radius: var(--r-lg);
+  background: var(--fill);
+  color: var(--text);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gender.active {
+  background: var(--accent);
+  background-image: var(--grad-accent);
+  color: #fff;
+}
+
+.metric {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 0;
+}
+
+.metric-label {
+  width: 80rpx;
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: var(--fs-md);
+  font-weight: 500;
+  color: var(--text);
+}
+
+.metric-right {
+  margin-left: auto;
+  width: 450rpx;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12rpx;
+}
+
+.metric-box {
+  width: 230rpx;
+  flex-shrink: 0;
+  height: 64rpx;
+  border-radius: var(--r-sm);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8rpx;
+  background: var(--fill);
+  box-sizing: border-box;
+}
+
+.metric-input {
+  width: 100%;
+  height: 64rpx;
+  min-height: 64rpx;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  text-align: center;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--text);
+  line-height: 64rpx;
+}
+
+.metric-unit {
+  width: 40rpx;
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.op {
+  width: 56rpx;
+  height: 56rpx;
+  flex-shrink: 0;
+  border-radius: var(--r-sm);
+  background: var(--fill);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-lg);
+  color: var(--text);
+}
+
+.metric-right .op:first-child {
+  margin-right: 10rpx;
+}

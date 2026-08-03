@@ -1,0 +1,373 @@
+.page {
+  position: relative;
+  background: transparent;
+  padding-top: 0;
+}
+
+.ambient-glow {
+  position: absolute;
+  left: -32rpx;
+  right: -32rpx;
+  top: 0;
+  height: 520rpx;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.ambient-blob {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.ambient-blob.a {
+  width: 140%;
+  height: 90%;
+  left: -25%;
+  top: -40%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 45, 85, 0.22) 0%,
+    rgba(255, 69, 58, 0.08) 36%,
+    transparent 70%
+  );
+}
+
+.ambient-blob.b {
+  width: 100%;
+  height: 60%;
+  right: -30%;
+  left: auto;
+  top: -20%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 110, 50, 0.1) 0%,
+    transparent 65%
+  );
+}
+
+.nav {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  margin-bottom: 8rpx;
+  min-height: 56rpx;
+}
+
+.nav-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64rpx;
+  height: 64rpx;
+  margin-left: -12rpx;
+}
+
+.nav-back-chev {
+  font-size: 52rpx;
+  font-weight: 400;
+  line-height: 1;
+  color: #fff;
+}
+
+.stack {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+/* —— 个人信息 + 三大项 —— */
+.hero {
+  padding: 8rpx 0 8rpx;
+}
+
+.profile-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 24rpx;
+  margin-bottom: 40rpx;
+}
+
+.avatar-btn {
+  width: 104rpx !important;
+  height: 104rpx !important;
+  min-width: 104rpx !important;
+  min-height: 104rpx !important;
+  max-width: 104rpx;
+  max-height: 104rpx;
+  border-radius: 50% !important;
+  background: rgba(120, 120, 128, 0.28);
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  box-sizing: border-box;
+}
+
+.avatar-btn::after {
+  border: none !important;
+}
+
+.avatar-img.filled {
+  width: 104rpx;
+  height: 104rpx;
+  border-radius: 50%;
+  display: block;
+}
+
+.avatar-img.placeholder {
+  width: 46rpx;
+  height: 46rpx;
+}
+
+.profile-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.profile-name {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+  letter-spacing: -0.5rpx;
+  max-width: 460rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0;
+}
+
+.meta {
+  font-size: 24rpx;
+  font-weight: 500;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.meta-dot {
+  margin: 0 10rpx;
+  font-size: 24rpx;
+  color: rgba(235, 235, 245, 0.28);
+}
+
+/* 三大项 */
+.sec-head {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+.sec-title {
+  font-size: 24rpx;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.link {
+  color: var(--accent);
+  font-size: 24rpx;
+  font-weight: 600;
+  padding: 4rpx 0 4rpx 16rpx;
+  flex-shrink: 0;
+}
+
+.lifts-total {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 10rpx;
+  margin-bottom: 28rpx;
+}
+
+.lifts-total-val {
+  font-size: 88rpx;
+  font-weight: 800;
+  color: #fff;
+  line-height: 0.95;
+  letter-spacing: -2rpx;
+  font-variant-numeric: tabular-nums;
+}
+
+.lifts-total-unit {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: rgba(235, 235, 245, 0.4);
+}
+
+.lifts-row {
+  display: flex;
+  flex-direction: row;
+  gap: 12rpx;
+}
+
+.lift {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.lift-name {
+  font-size: 22rpx;
+  font-weight: 600;
+  color: rgba(235, 235, 245, 0.45);
+  line-height: 1.2;
+}
+
+.lift-val {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+.lift-unit {
+  margin-left: 4rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+  color: rgba(235, 235, 245, 0.4);
+}
+
+/* —— 训练周期计划 —— */
+.plan-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 28rpx 32rpx;
+}
+
+.plan-top {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.plan-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.plan-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.plan-right {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8rpx;
+  flex-shrink: 0;
+  padding-top: 2rpx;
+}
+
+.week-tag {
+  font-size: 22rpx;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 8rpx 14rpx;
+  border-radius: var(--r-sm);
+  line-height: 1.2;
+}
+
+.entry-arrow {
+  font-size: 34rpx;
+  color: rgba(235, 235, 245, 0.35);
+  line-height: 1;
+}
+
+.plan-goal {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10rpx;
+}
+
+.plan-goal-k {
+  font-size: 24rpx;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.plan-goal-v {
+  font-size: 24rpx;
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* —— 训练习惯 —— */
+.habits-card {
+  padding-top: 26rpx;
+  padding-bottom: 10rpx;
+}
+
+.habits-card .sec-head {
+  margin-bottom: 4rpx;
+}
+
+.kv {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx 0;
+  border-bottom: 0.5px solid rgba(84, 84, 88, 0.5);
+  gap: 24rpx;
+}
+
+.kv.last {
+  border-bottom: none;
+}
+
+.kv-k {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.kv-v {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: var(--muted);
+  text-align: right;
+}
+
+.danger {
+  color: rgba(255, 45, 85, 0.85);
+  margin-top: 8rpx;
+  padding-bottom: var(--s2);
+}

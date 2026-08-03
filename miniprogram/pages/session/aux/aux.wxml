@@ -1,0 +1,31 @@
+<ambient-glow />
+<view class="train" style="padding-top: {{navPadTop}}px;">
+  <view class="top">
+    <view class="close" bindtap="openExit">✕</view>
+    <view class="name">{{title}}</view>
+    <view class="dots">
+      <view wx:for="{{dots}}" wx:key="index" class="dot {{item}}"></view>
+    </view>
+    <view class="sub">{{subText}}</view>
+  </view>
+
+  <view class="mid">
+    <view class="zone">{{zoneText}}</view>
+    <view class="timer">{{timerText}}</view>
+    <view class="hint">{{hint}}</view>
+  </view>
+
+  <view class="bottom">
+    <button class="btn-primary" bindtap="next">{{cta}}</button>
+  </view>
+
+  <view class="mask" wx:if="{{showExit}}" catchtouchmove="noop">
+    <view class="sheet">
+      <view class="sheet-title">结束这次训练？</view>
+      <view class="sheet-desc">已完成的段落会保留，可从今日继续。</view>
+      <button class="btn-primary" bindtap="saveExit">保存并退出</button>
+      <button class="btn-dark" bindtap="closeExit">继续训练</button>
+      <view class="btn-ghost light" bindtap="discardExit">不保存，直接退出</view>
+    </view>
+  </view>
+</view>
