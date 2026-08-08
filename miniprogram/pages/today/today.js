@@ -1,6 +1,6 @@
 const storage = require('../../utils/storage')
 const { fetchWechatUserProfile } = require('../../utils/wechat-user')
-const { buildTodayView, resolveAccessoryKg } = require('../../services/plan')
+const { buildTodayView } = require('../../services/plan')
 const copy = require('../../utils/copy')
 const {
   BODY_OPTIONS,
@@ -8,6 +8,13 @@ const {
   resolveAdjustments
 } = require('../../services/ready-adjust')
 const { formatMainSetSheet } = require('../../services/warmup-sets')
+const {
+  formatAccessoryBlock,
+  buildSessionCards
+} = require('../../services/set-cards')
+const quality = require('../../services/session-quality')
+const { formatMmSs } = require('../../utils/format')
+const disclaimer = require('../../services/disclaimer')
 
 const BODY_KEY = 'af_today_body'
 const FULL_WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -15,7 +22,7 @@ const FULL_WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 function loadBodyForToday() {
   try {
     var saved = wx.getStorageSync(BODY_KEY)
-    var today = new Date().toISOString().slice(0, 10)
+    var today = quality.todayKey()
     if (saved && saved.date === today && saved.body) return saved.body
   } catch (e) {}
   return 'normal'
@@ -23,237 +30,54 @@ function loadBodyForToday() {
 
 function saveBodyForToday(body) {
   wx.setStorageSync(BODY_KEY, {
-    date: new Date().toISOString().slice(0, 10),
+    date: quality.todayKey(),
     body: body || 'normal'
   })
 }
 
-/** 辅项：表格用组/次字段 */
-function formatAccessoryBlock(a) {
-  var sets = a && a.sets != null ? Number(a.sets) : 0
-  var reps = a && a.reps != null ? a.reps : ''
-  var kg = a && a.kg != null && a.kg !== '' && !isNaN(Number(a.kg)) ? Number(a.kg) : null
-  var loadType = (a && a.loadType) || (kg != null ? 'external' : 'bodyweight')
-  return {
-    name: copy.moveName(a && a.name),
-    sets: sets > 0 ? String(sets) : '—',
-    reps: reps !== '' && reps != null ? String(reps) : '—',
-    kg: kg,
-    loadType: loadType,
-    badge: sets > 0 && reps !== '' ? sets + '×' + reps : '—',
-    meta: sets > 0 && reps !== '' ? sets + ' 组 · 每组 ' + reps + ' 次' : ''
-  }
-}
-
-function makeSetCard(opts) {
-  var hasUnit = !!(opts.hasKg || opts.plateUnit)
-  return {
-    kgText: opts.kgText || '',
-    hasKg: !!opts.hasKg,
-    plateUnit: opts.plateUnit || '',
-    plateClass: opts.plateClass != null ? opts.plateClass : hasUnit ? '' : 'body',
-    name: opts.name || '',
-    detail: opts.detail || '',
-    setsText: opts.setsText != null ? String(opts.setsText) : '',
-    setsLabel: opts.setsLabel || '组',
-    tone: opts.tone || 'work',
-    showStatus: !!opts.showStatus,
-    statusChip: opts.statusChip || ''
-  }
-}
-
-function parseSetsFromText(text) {
-  var m = String(text || '').match(/(\d+)\s*[×xX]/)
-  return m ? m[1] : ''
-}
-
-function parsePctFromText(text) {
-  var m = String(text || '').match(/(\d+)\s*[–\-〜~]\s*(\d+)\s*%/)
-  if (m) return m[1] + '-' + m[2]
-  m = String(text || '').match(/(\d+)\s*%/)
-  return m ? m[1] : ''
-}
-
-function parseKgFromText(text) {
-  var m = String(text || '').match(/(\d+(?:\.\d+)?)\s*(?:\/\s*\d+(?:\.\d+)?)?\s*kg/i)
-  return m ? m[1] : ''
-}
-
-/** 有氧/WOD：解析个数（回合、次数、卡路里等） */
-function parseCountFromText(text) {
-  var s = String(text || '')
-  var ladder = s.match(/(\d+)\s*[-–]\s*(\d+)\s*[-–]\s*(\d+)/)
-  if (ladder) return ladder[1]
-  var range = s.match(/(\d+)\s*[–\-]\s*(\d+)\s*次/)
-  if (range) return range[2]
-  var times = s.match(/(\d+)\s*次/)
-  if (times) return times[1]
-  var cal = s.match(/(\d+)\s*卡/)
-  if (cal) return cal[1]
-  var lead = s.match(/(?:^|[：:·，,\s])(\d{1,3})(?!\s*[%％分钟分′'km])/ )
-  return lead ? lead[1] : ''
-}
-
-function blockDetailText(b) {
-  if (!b) return '按计划完成'
-  if (b.detail) return b.detail
-  if (b.hint) return b.hint
-  if (b.setsText) return b.setsText
-  if (b.movements && b.movements.length) return b.movements.join(' · ')
-  if (b.prescription) return b.prescription
-  if (b.cues && b.cues.length) return b.cues.join(' · ')
-  return '按计划完成'
-}
-
-function formatKm(km) {
-  if (km == null || km === '' || isNaN(Number(km))) return ''
-  var n = Number(km)
-  if (n <= 0) return ''
-  return n % 1 === 0 ? String(n) : String(Math.round(n * 10) / 10)
-}
-
-/** Zone2 约 6.5′/km，无 distanceKm 时估算 */
-function estimateKmFromMinutes(minutes) {
-  var m = Number(minutes)
-  if (!m || m <= 0) return ''
-  return formatKm(Math.round((m / 6.5) * 10) / 10)
-}
-
-function isRunLikeBlock(b, session) {
-  if (!b) return false
-  if (b.distanceKm != null) return true
-  var n = (b.name || '') + ' ' + ((session && session.auxId) || '') + ' ' + ((session && session.id) || '')
-  return /跑|running|zone2|Zone2/i.test(n) && !/站技/.test(b.name || '')
-}
-
-function isStrengthLikeBlock(b) {
-  if (!b) return false
-  if (b.kind === 'strength' || b.role === 'main') return true
-  return /力量|深蹲|卧推|硬拉|高翻|抓举|推举|前蹲|后蹲|杠铃|壶铃|荡壶/i.test(
-    b.name || ''
-  )
-}
-
-function isMetconLikeBlock(b) {
-  if (!b) return false
-  if (b.kind === 'metcon' || b.role === 'wod') return true
-  return /wod|metcon|amrap|emom|for\s*time|回合/i.test(b.name || '')
-}
-
-/** AMRAP / EMOM：左侧用时间窗 */
-function isTimedMetcon(b) {
-  if (!b) return false
-  var style = String(b.style || '')
-  var name = String(b.name || '')
-  if (/^(amrap|emom)$/i.test(style)) return true
-  return /\bAMRAP\b|\bEMOM\b/i.test(name)
-}
-
-/** For Time：左侧用时限（有 cap 时） */
-function isForTimeMetcon(b) {
-  if (!b) return false
-  var style = String(b.style || '')
-  var name = String(b.name || '')
-  if (/for_?time/i.test(style)) return true
-  return /for\s*time/i.test(name)
-}
-
-function parseMetconMinutes(block, name, text) {
-  if (block) {
-    if (block.minutes != null && block.minutes !== '') return String(block.minutes)
-    if (block.durationMin != null && block.durationMin !== '') return String(block.durationMin)
-    if (block.capMin != null && block.capMin !== '') return String(block.capMin)
-  }
-  var m = String(name || '').match(/(?:AMRAP|EMOM)\s*(\d+)/i)
-  if (m) return m[1]
-  m = String(text || name || '').match(/(\d+)\s*(?:分钟|分|′|'|min\b)/i)
-  return m ? m[1] : ''
-}
-
-/**
- * 左侧主指标：力量→kg/%，跑步→km，AMRAP/EMOM→分，有氧→个数，站技→项数
- */
-function resolveLeftMetric(kind, block, text) {
-  var t = text || blockDetailText(block)
-  var name = (block && block.name) || ''
-
-  if (kind === 'load') {
-    var kg = parseKgFromText(t) || parseKgFromText(name)
-    if (!kg && block && block.kg != null && block.kg !== '') kg = String(block.kg)
-    if (kg) return { kgText: kg, hasKg: true, plateUnit: '', plateClass: '', tone: 'work' }
-    var pct = parsePctFromText(t) || parsePctFromText(name)
-    if (pct) return { kgText: pct, hasKg: false, plateUnit: '%', plateClass: '', tone: 'peak' }
-    // 壶铃/哑铃/绳索等：无处方重量时用建议 kg
-    if (/壶铃|荡壶|哑铃|绳索|kettlebell/i.test(name)) {
-      var est = resolveAccessoryKg(
-        block || { name: name },
-        typeof storage !== 'undefined' ? storage.getProfile() : null
-      )
-      if (est != null) {
-        return { kgText: String(est), hasKg: true, plateUnit: '', plateClass: '', tone: 'work' }
-      }
-    }
-    return { kgText: '力量', hasKg: false, plateUnit: '', plateClass: 'body', tone: 'work' }
-  }
-
-  if (kind === 'km') {
-    var km =
-      formatKm(block && block.distanceKm) ||
-      estimateKmFromMinutes(block && (block.minutes != null ? block.minutes : block.durationMin))
-    if (km) return { kgText: km, hasKg: false, plateUnit: 'km', plateClass: '', tone: 'work' }
-    return { kgText: '跑', hasKg: false, plateUnit: '', plateClass: 'body', tone: 'body' }
-  }
-
-  if (kind === 'min') {
-    var mins = parseMetconMinutes(block, name, t)
-    if (mins) return { kgText: mins, hasKg: false, plateUnit: '分', plateClass: '', tone: 'work' }
-    return { kgText: '计时', hasKg: false, plateUnit: '', plateClass: 'body', tone: 'body' }
-  }
-
-  if (kind === 'count') {
-    var count =
-      parseCountFromText(name) ||
-      parseCountFromText(t) ||
-      (block && block.reps != null ? String(block.reps) : '')
-    if (count) return { kgText: count, hasKg: false, plateUnit: '个', plateClass: '', tone: 'work' }
-    return { kgText: '有氧', hasKg: false, plateUnit: '', plateClass: 'body', tone: 'body' }
-  }
-
-  if (kind === 'station') {
-    var sc = block && block.stationCount
-    if (sc == null && block && block.picks && block.picks.length) sc = Math.min(2, block.picks.length)
-    if (sc == null) {
-      var sm = name.match(/(\d+)\s*[–\-]\s*(\d+)/)
-      if (sm) sc = sm[2]
-    }
-    if (sc != null) return { kgText: String(sc), hasKg: false, plateUnit: '项', plateClass: '', tone: 'work' }
-    return { kgText: '站', hasKg: false, plateUnit: '', plateClass: 'body', tone: 'body' }
-  }
-
-  return { kgText: '—', hasKg: false, plateUnit: '', plateClass: 'body', tone: 'body' }
-}
-
-function buildUi(view, draft, completedToday, body) {
+function buildUi(view, draft, dayLog, body, outcomeByWd) {
   const slot = view.slot || {}
   const detail = view.detail || {}
   const isRest = slot.type === 'rest'
-  const isStrength = slot.type === 'strength' && detail.main
+  const grade = dayLog ? quality.ensureGrade(dayLog) : null
+  const isLeave = !!(dayLog && dayLog.kind === 'leave') && !isRest
+  const isMissed = !!(dayLog && quality.isMissedLog(dayLog)) && !isRest
+  const isCompleted = !!(dayLog && quality.isCompletedLog(dayLog)) && !isRest
   const session = detail.session || {}
-  const isCf = !isRest && !isStrength && session.layout === 'main-wod' && session.main
+  // 计划内容与结局解耦：请假/漏练也要展示当天课表
+  const isStrength = slot.type === 'strength' && !!detail.main
+  const isCf = !isRest && !isStrength && session.layout === 'main-wod' && !!session.main
   const isAux = !isRest && !isStrength && !isCf
   const mainBase = detail.main || {}
+  const canTrain =
+    view.isToday &&
+    !isRest &&
+    !isLeave &&
+    !isMissed &&
+    !isCompleted &&
+    !(session && session.closed)
+
   let ctaText = '开始训练'
   let statusChip = '未开始'
-  if (draft) {
+  var draftSummary = (draft && draft.summary) || '存在未完成课次，可从中断处继续'
+  if (isLeave) {
+    statusChip = '已请假'
+  } else if (isMissed) {
+    statusChip = dayLog.outcome === 'partial' ? '未练完' : '未训练'
+  } else if (draft) {
     ctaText = '继续未完成课次'
     statusChip = '训练中'
-  } else if (completedToday) {
-    ctaText = '再练一次'
+    if (quality.isDraftStaleOver24h(draft)) {
+      draftSummary = '超过一天的未完成课次，可从中断处继续'
+    }
+  } else if (isCompleted) {
     statusChip = '已完成'
   }
-  let cardTitle = isRest ? '休息日' : ''
-  // 「未开始」是默认态，不展示；休息日也不显示状态标签
+
+  let cardTitle = isRest ? '休息日' : isLeave ? '请假' : isMissed ? '未完成' : ''
   var showStatus = !isRest && statusChip !== '未开始'
+  var qualityTitle = grade ? grade.title : ''
+  var qualityScore = grade ? grade.score : null
 
   var mainName = copy.moveName(mainBase.name)
   var mainSetSheet = isStrength ? formatMainSetSheet(mainBase) : []
@@ -264,230 +88,140 @@ function buildUi(view, draft, completedToday, body) {
     return formatAccessoryBlock(a)
   })
   var adjustNote = ''
-  var showBodyAdjust = !!(isStrength && view.isToday && !draft)
+  var showBodyAdjust = !!(isStrength && canTrain && !draft && !isCompleted)
+  var strengthMain = mainBase
+  var strengthAccessories = detail.accessories || []
 
-  if (isStrength && view.isToday) {
+  if (isStrength && canTrain && view.isToday) {
     var applied = applyStrengthAdjustments(detail, body || 'normal')
     if (applied.main) {
+      strengthMain = applied.main
+      strengthAccessories = applied.accessories || []
       mainName = copy.moveName(applied.main.name)
       mainSetSheet = formatMainSetSheet(applied.main)
-      accessories = (applied.accessories || []).map(function (a) {
+      accessories = strengthAccessories.map(function (a) {
         return formatAccessoryBlock(a)
       })
       adjustNote = applied.note || ''
     }
   }
 
-  // 统一卡片：左图 + 动作/内容 + 右侧数量
-  var mainCards = []
-  var accCards = []
-  var secMainLabel = ''
-  var secAccLabel = ''
-  var showSetCards = false
-
-  if (isStrength) {
-    showSetCards = true
-    secMainLabel = '主项'
-    secAccLabel = '辅项'
-    for (var si = 0; si < mainSetSheet.length; si++) {
-      var row = mainSetSheet[si]
-      var detailParts = []
-      if (row.phase) detailParts.push(row.phase)
-      if (row.repsText) detailParts.push('每组 ' + row.repsText + ' 次')
-      var hasKg = row.kgText !== '—' && row.kgText !== ''
-      mainCards.push(
-        makeSetCard({
-          kgText: row.kgText,
-          hasKg: hasKg,
-          plateClass: hasKg ? '' : 'body',
-          name: mainName,
-          detail: detailParts.join(' · ') || '按计划完成',
-          setsText: row.countText || '1',
-          setsLabel: '组',
-          tone: row.tone || 'work',
-          showStatus: si === 0 && showStatus,
-          statusChip: statusChip
-        })
-      )
-    }
-    for (var ai = 0; ai < accessories.length; ai++) {
-      var acc = accessories[ai]
-      var accLeft
-      if (acc.kg != null) {
-        accLeft = {
-          kgText: String(acc.kg),
-          hasKg: true,
-          plateUnit: '',
-          plateClass: '',
-          tone: 'work'
-        }
-      } else {
-        accLeft = {
-          kgText: '自重',
-          hasKg: false,
-          plateUnit: '',
-          plateClass: 'body',
-          tone: 'body'
-        }
-      }
-      accCards.push(
-        makeSetCard({
-          kgText: accLeft.kgText,
-          hasKg: accLeft.hasKg,
-          plateUnit: accLeft.plateUnit,
-          plateClass: accLeft.plateClass,
-          name: acc.name,
-          detail: acc.reps !== '—' ? '每组 ' + acc.reps + ' 次' : '按感觉完成',
-          setsText: acc.sets !== '—' ? acc.sets : '1',
-          setsLabel: '组',
-          tone: accLeft.tone || 'body'
-        })
-      )
-    }
-  } else if (isCf && !session.closed) {
-    showSetCards = true
-    secMainLabel = '主项'
-    secAccLabel = '辅项'
-    var cfMain = session.main || {}
-    var cfDetail = blockDetailText(cfMain)
-    var cfSets = parseSetsFromText(cfDetail)
-    var cfLeft = resolveLeftMetric('load', cfMain, cfDetail)
-    mainCards.push(
-      makeSetCard({
-        kgText: cfLeft.kgText,
-        hasKg: cfLeft.hasKg,
-        plateUnit: cfLeft.plateUnit,
-        plateClass: cfLeft.plateClass,
-        name: cfMain.name || '力量',
-        detail: cfDetail,
-        setsText: cfSets || (cfMain.minutes != null ? cfMain.minutes : ''),
-        setsLabel: cfSets ? '组' : '分',
-        tone: cfLeft.tone || 'work',
-        showStatus: showStatus,
-        statusChip: statusChip
-      })
-    )
-    var cfAcc = session.accessories || []
-    for (var ci = 0; ci < cfAcc.length; ci++) {
-      var wod = cfAcc[ci]
-      var wodDetail = blockDetailText(wod)
-      var wodKind = 'count'
-      if (isStrengthLikeBlock(wod)) wodKind = 'load'
-      else if (isTimedMetcon(wod)) wodKind = 'min'
-      // For Time：左侧仍用回合/个数（如 21）；有独立时限时再走分钟
-      else if (isForTimeMetcon(wod) && wod.capMin && !/\d+\s*[-–]\s*\d+\s*[-–]\s*\d+/.test(wod.name || ''))
-        wodKind = 'min'
-      var wodLeft = resolveLeftMetric(wodKind, wod, wod.name + ' ' + wodDetail)
-      // 左侧已是分钟时，右侧不再重复时长
-      var rightNum = '—'
-      var rightLabel = ''
-      if (wodKind === 'min') {
-        rightNum = '—'
-        rightLabel = ''
-      } else if (wod.minutes != null && wod.minutes !== '') {
-        rightNum = String(wod.minutes)
-        rightLabel = '分'
-      } else {
-        var ladder = parseCountFromText(wod.name || '')
-        if (ladder) {
-          rightNum = ladder
-          rightLabel = '个'
-        }
-      }
-      accCards.push(
-        makeSetCard({
-          kgText: wodLeft.kgText,
-          hasKg: wodLeft.hasKg,
-          plateUnit: wodLeft.plateUnit,
-          plateClass: wodLeft.plateClass,
-          name: wod.name || 'WOD',
-          detail: wodDetail,
-          setsText: rightNum,
-          setsLabel: rightLabel,
-          tone: wodLeft.tone || 'body'
-        })
-      )
-    }
-  } else if (isAux && !session.closed) {
-    showSetCards = true
-    secMainLabel = session.name || copy.slotLabel(slot.label) || '调节'
-    var blocks = session.blocks || []
-    var auxId = session.auxId || slot.key || ''
-    for (var bi = 0; bi < blocks.length; bi++) {
-      var blk = blocks[bi]
-      var blkName = blk.name || '段落'
-      if (blk.kindLabel) blkName = blk.kindLabel + ' · ' + blk.name
-      var mins = blk.minutes != null ? blk.minutes : blk.durationMin
-      var blkText = blockDetailText(blk)
-      var leftKind = 'count'
-      if (isRunLikeBlock(blk, session) || auxId === 'running') leftKind = 'km'
-      else if (/站技|站/.test(blk.name || '') || blk.stationCount != null || (blk.picks && blk.picks.length))
-        leftKind = 'station'
-      else if (isStrengthLikeBlock(blk)) leftKind = 'load'
-      else if (isMetconLikeBlock(blk)) leftKind = 'count'
-      else if (auxId === 'hyrox' && /跑|收尾|过渡/.test(blk.name || '')) leftKind = 'km'
-      var blkLeft = resolveLeftMetric(leftKind, blk, blkText)
-      mainCards.push(
-        makeSetCard({
-          kgText: blkLeft.kgText,
-          hasKg: blkLeft.hasKg,
-          plateUnit: blkLeft.plateUnit,
-          plateClass: blkLeft.plateClass,
-          name: blkName,
-          detail: blkText,
-          setsText: mins != null && mins !== '' ? mins : '—',
-          setsLabel: '分',
-          tone: blkLeft.tone || 'body',
-          showStatus: bi === 0 && showStatus,
-          statusChip: statusChip
-        })
-      )
-    }
+  var cards
+  if (isRest) {
+    cards = buildSessionCards({ type: 'rest' })
+  } else if (isStrength) {
+    cards = buildSessionCards({
+      type: 'strength',
+      main: strengthMain,
+      accessories: strengthAccessories,
+      mainName: mainName,
+      mainSetSheet: mainSetSheet,
+      accessoryBlocks: accessories,
+      profile: storage.getProfile(),
+      showStatus: showStatus,
+      statusChip: statusChip
+    })
+  } else {
+    cards = buildSessionCards({
+      type: 'aux',
+      layout: session.layout || '',
+      session: Object.assign({}, session, {
+        name: session.name || copy.slotLabel(slot.label) || '调节'
+      }),
+      profile: storage.getProfile(),
+      showStatus: showStatus,
+      statusChip: statusChip
+    })
   }
 
-  const auxNote = session.closed
-    ? session.note || '本周不安排此课'
-    : session.note || '按段落顺序完成，动作质量优先'
+  var leaveNote = '本课作废，不计完成，也不能补练'
+  var skippedLabel = copy.slotLabel(slot.label) || ''
+  if (skippedLabel) {
+    leaveNote = '已跳过「' + skippedLabel + '」，本课作废，不能补练'
+  }
+
+  // 总结区：称号 + 分数；完成课展示总时长；请假附说明
+  var qualityNote = isLeave ? leaveNote : ''
+  var qualityTone = grade ? grade.tone : ''
+  var qualityKicker = '训练总结'
+  var durationSec = isCompleted ? quality.durationSecFromLog(dayLog) : 0
+  var showDuration = !!(isCompleted && durationSec > 0)
+  var durationText = showDuration ? formatMmSs(durationSec) : ''
+  var durationItems = showDuration ? quality.durationItemsFromLog(dayLog) : []
+
+  var canLeave =
+    view.isToday &&
+    !isRest &&
+    !isLeave &&
+    !isMissed &&
+    !isCompleted &&
+    !(session && session.closed)
 
   return {
     isRest: isRest,
+    isLeave: isLeave,
+    isMissed: isMissed,
+    isCompleted: isCompleted,
     isStrength: isStrength,
     isCf: isCf,
     isAux: isAux,
-    showSetCards: showSetCards,
-    showStart: view.isToday && !isRest,
-    showRestActions: view.isToday && isRest,
+    showSetCards: !isRest && !!cards.showSetCards,
+    showQualityBanner: !!(!isRest && qualityTitle && (isLeave || isMissed || isCompleted)),
+    showStart: canTrain,
+    showRestActions: view.isToday && isRest && !isLeave,
+    showLeaveActions: view.isToday && isLeave,
+    showLeaveLink: canLeave,
     showPreviewHint: !view.isToday,
     showBodyAdjust: showBodyAdjust,
     cardTitle: cardTitle,
     showStatus: showStatus,
     phaseText: view.phase || '',
-    mainName: mainName,
+    mainName: mainName || cards.mainName,
     mainSetSheet: mainSetSheet,
     mainSetsText: mainSetsText,
     accessories: accessories,
-    secMainLabel: secMainLabel,
-    secAccLabel: secAccLabel,
-    mainCards: mainCards,
-    accCards: accCards,
+    secMainLabel: cards.secMainLabel,
+    secAccLabel: cards.secAccLabel,
+    mainCards: cards.mainCards,
+    accCards: cards.accCards,
     adjustNote: adjustNote,
-    restNote: '今日不安排力量与高强度训练。完成 20–30 分钟 Zone2 步行 + 髋踝活动度，保证下周训练质量。',
+    restNote: cards.restNote,
+    leaveNote: leaveNote,
+    qualityNote: qualityNote,
+    qualityTitle: qualityTitle,
+    qualityScore: qualityScore,
+    qualityTone: qualityTone,
+    qualityKicker: qualityKicker,
+    showDuration: showDuration,
+    durationText: durationText,
+    durationItems: durationItems,
+    hasDurationItems: durationItems.length > 0,
     auxName: session.name || copy.slotLabel(slot.label) || '调节课',
     auxDuration: session.durationMin || 30,
     auxDurationText: session.closed ? '休' : (session.durationMin || 30) + ' 分钟',
-    auxNote: auxNote,
+    auxNote: cards.auxNote,
     auxClosed: !!session.closed,
     ctaText: ctaText,
     statusChip: statusChip,
     hasDraft: !!draft,
-    draftSummary: (draft && draft.summary) || '存在未完成课次，可从中断处继续',
+    draftSummary: draftSummary,
     slots: (view.slots || []).map(function (s, i) {
       var wd = Number(s.weekday) || i + 1
+      var ol = outcomeByWd && outcomeByWd[wd]
+      var left = !!(ol && ol.kind === 'leave')
+      var missed = !!(ol && ol.kind === 'missed')
+      var done = !!(ol && quality.isCompletedLog(ol))
+      var label = copy.slotLabelShort(s.label)
+      if (left) label = '假'
+      else if (missed) label = '缺'
       return {
         weekday: s.weekday,
         dayLabel: FULL_WEEKDAY_LABELS[wd - 1] || s.dayLabel,
-        label: copy.slotLabelShort(s.label),
-        active: i === view.selectedIndex
+        label: label,
+        active: i === view.selectedIndex,
+        left: left,
+        missed: missed,
+        done: done
       }
     })
   }
@@ -500,6 +234,8 @@ Page({
     cycleName: '',
     week: 1,
     phase: '',
+    weekLine: '',
+    weekHint: '',
     goalText: '目标：三大项成绩',
     selectedIndex: 0,
     ui: {},
@@ -508,16 +244,25 @@ Page({
     bodyOptions: BODY_OPTIONS,
     moveSheetShow: false,
     moveSheetName: '',
-    avatarUrl: ''
+    avatarUrl: '',
+    durationExpanded: false
   },
 
   onShow() {
+    if (!disclaimer.ensureReadyForApp()) return
     const profile = storage.getProfile()
-    if (!profile || !profile.planId) {
-      wx.redirectTo({ url: '/pages/onboarding/ability/ability' })
-      return
+    try {
+      quality.settlePastTrainingDays(profile)
+      quality.maybeAdvanceTrainingWeek(storage.getProfile() || profile)
+    } catch (e) {
+      console.warn('today settle/advance failed', e)
     }
-    this.refresh(this._selectedIndex)
+    try {
+      this.refresh(this._selectedIndex)
+    } catch (e2) {
+      console.error('today refresh failed', e2)
+      this.setData({ ready: true })
+    }
   },
 
   onHide() {
@@ -527,33 +272,52 @@ Page({
   },
 
   refresh(selectedIndex) {
-    const profile = storage.getProfile()
+    var profile = storage.getProfile()
+    quality.settlePastTrainingDays(profile)
+    quality.maybeAdvanceTrainingWeek(profile)
+    profile = storage.getProfile()
     const view = buildTodayView(profile, selectedIndex)
     this._selectedIndex = view.selectedIndex
     const draftRaw = storage.getDraft()
-    const todayKey = new Date().toISOString().slice(0, 10)
+    const dateKey = quality.todayKey()
     const logs = storage.getLogs()
-    const weekday = view.slots[view.selectedIndex] && view.slots[view.selectedIndex].weekday
-    // 进行中只挂在草稿对应的那一天，不串到周历其他日
+    const weekday =
+      view.slots[view.selectedIndex] && view.slots[view.selectedIndex].weekday
     var draft = null
-    if (draftRaw && draftRaw.date === todayKey) {
+    if (draftRaw && draftRaw.date === dateKey) {
       if (draftRaw.weekday == null || draftRaw.weekday === '') {
         draft = view.isToday ? draftRaw : null
       } else if (Number(draftRaw.weekday) === Number(weekday)) {
         draft = draftRaw
       }
     }
-    const completedToday = logs.some(function (l) {
-      return l.date === todayKey && Number(l.weekday) === Number(weekday)
-    })
+    const selectedDate = quality.dateForWeekday(dateKey, weekday)
+    const dayLog = quality.findDayLog(logs, selectedDate, weekday)
+    const outcomeByWd = quality.weekOutcomeMap(logs, dateKey)
     const body = loadBodyForToday()
-    const ui = buildUi(view, draft, completedToday, body)
+    const ui = buildUi(view, draft, dayLog, body, outcomeByWd)
+    var weekHint = ''
+    if (
+      profile &&
+      profile.lastWeekQuality &&
+      profile.trainingWeekStart === quality.mondayKey(dateKey)
+    ) {
+      weekHint = quality.weekQualityHintText(profile.lastWeekQuality)
+    }
     this._view = view
+    var weekLine =
+      '第 ' +
+      view.week +
+      ' 周' +
+      (view.phase ? ' · ' + view.phase : '') +
+      ' · 目标：三大项成绩'
     this.setData({
       ready: true,
       cycleName: view.cycleName,
       week: view.week,
-      phase: view.phase,
+      phase: view.phase || '',
+      weekLine: weekLine,
+      weekHint: weekHint,
       goalText: '目标：三大项成绩',
       selectedIndex: view.selectedIndex,
       viewIsToday: view.isToday,
@@ -575,6 +339,11 @@ Page({
   },
 
   goMe() {
+    const profile = storage.getProfile() || {}
+    if (profile.avatarUrl) {
+      wx.navigateTo({ url: '/pages/me/me' })
+      return
+    }
     fetchWechatUserProfile(function () {
       wx.navigateTo({ url: '/pages/me/me' })
     })
@@ -595,7 +364,81 @@ Page({
 
   selectDay(e) {
     const index = Number(e.currentTarget.dataset.index)
+    this.setData({ durationExpanded: false })
     this.refresh(index)
+  },
+
+  toggleDuration(e) {
+    if (e && e.stopPropagation) e.stopPropagation()
+    if (!this.data.ui || !this.data.ui.showDuration) return
+    this.setData({ durationExpanded: !this.data.durationExpanded })
+  },
+
+  markLeave() {
+    const ui = this.data.ui
+    if (!ui || !ui.showLeaveLink) return
+    if (!this.data.viewIsToday) {
+      wx.showToast({ title: '只能请今天的假', icon: 'none' })
+      return
+    }
+    const that = this
+    const view =
+      this._view || buildTodayView(storage.getProfile(), this.data.selectedIndex)
+    const slot = view.slot || {}
+    const label = copy.slotLabel(slot.label) || '今天的课'
+    var content =
+      '「' + label + '」记为请假（0 分）。课表不后移，本课作废，不能补练。'
+    if (this.data.draft) {
+      content =
+        '将放弃未完成课次，并把「' +
+        label +
+        '」记为请假（0 分，不能补练）。'
+    }
+    wx.showModal({
+      title: '今天请假？',
+      content: content,
+      confirmText: '请假',
+      confirmColor: '#FF2D55',
+      success(res) {
+        if (!res.confirm) return
+        storage.clearDraft()
+        var grade = quality.scoreLeave()
+        storage.appendLog({
+          date: quality.todayKey(),
+          weekday: slot.weekday,
+          kind: 'leave',
+          name: slot.label || label,
+          reason: 'manual',
+          score: grade.score,
+          title: grade.title,
+          finishedAt: Date.now()
+        })
+        that.refresh(that.data.selectedIndex)
+        wx.showToast({ title: '已请假', icon: 'none' })
+      }
+    })
+  },
+
+  revokeLeave() {
+    const ui = this.data.ui
+    if (!ui || !ui.showLeaveActions) return
+    const that = this
+    const view =
+      this._view || buildTodayView(storage.getProfile(), this.data.selectedIndex)
+    wx.showModal({
+      title: '撤销请假？',
+      content: '撤销后可重新开始今天的训练',
+      confirmText: '撤销',
+      success(res) {
+        if (!res.confirm) return
+        storage.removeLeaveLog(quality.todayKey(), view.slot && view.slot.weekday)
+        that.refresh(that.data.selectedIndex)
+      }
+    })
+  },
+
+  goCycle() {
+    wx.navigateTo({ url: '/pages/cycle/cycle' })
   },
 
   start() {
@@ -608,15 +451,28 @@ Page({
       wx.showToast({ title: '今天休息', icon: 'none' })
       return
     }
+    if (ui.isLeave) {
+      wx.showToast({ title: '今天已请假', icon: 'none' })
+      return
+    }
+    if (ui.isMissed) {
+      wx.showToast({ title: '今天没练就是没练', icon: 'none' })
+      return
+    }
+    if (ui.isCompleted) {
+      wx.showToast({ title: '今天已练完', icon: 'none' })
+      return
+    }
     if (this.data.draft) {
       this.continueDraft()
       return
     }
-    const view = this._view || buildTodayView(storage.getProfile(), this.data.selectedIndex)
+    const view =
+      this._view || buildTodayView(storage.getProfile(), this.data.selectedIndex)
     if (ui.isStrength) {
       const adjustments = resolveAdjustments(this.data.body || 'normal')
       wx.setStorageSync('af_ready_payload', {
-        date: new Date().toISOString().slice(0, 10),
+        date: quality.todayKey(),
         weekday: view.slot.weekday,
         slot: view.slot,
         adjustments: adjustments,
@@ -638,18 +494,4 @@ Page({
     }
   },
 
-  discardDraft() {
-    const that = this
-    wx.showModal({
-      title: '放弃未完成课次？',
-      content: '已完成的组不会写入正式记录',
-      confirmColor: '#FF2D55',
-      success(res) {
-        if (res.confirm) {
-          storage.clearDraft()
-          that.refresh(that.data.selectedIndex)
-        }
-      }
-    })
-  }
 })

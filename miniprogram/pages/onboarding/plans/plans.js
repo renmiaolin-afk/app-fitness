@@ -1,13 +1,15 @@
 const storage = require('../../../utils/storage')
+const disclaimer = require('../../../services/disclaimer')
 const { callRecommendPlans } = require('../../../services/api')
 const {
   getWeekSlots,
   serializeWeekSlots,
-  PLAN_OPTIONS
+  PLAN_OPTIONS,
+  normalizeAuxiliaries
 } = require('../../../services/plan')
 const copy = require('../../../utils/copy')
 
-var DAY_LABELS = ['一', '二', '三', '四', '五', '六', '日']
+var DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 function planCatalog(id) {
   for (var i = 0; i < PLAN_OPTIONS.length; i++) {
@@ -35,10 +37,13 @@ function mapPlansForUi(result, profile) {
   return (result.plans || []).map(function (p) {
     var cat = planCatalog(p.id) || {}
     var slots = getWeekSlots(p.id, aux)
+    var what = p.problem || cat.problem || ''
+    var outcome = p.goal || cat.goal || ''
+    var intro = [what, outcome].filter(Boolean).join('\n')
     return {
       id: p.id,
       name: p.name,
-      intro: p.problem || cat.problem || '',
+      intro: intro,
       weekSlots: serializeWeekSlots(slots),
       weekCells: cellsFromSlots(slots, -1, -1),
       selected: p.id === selectedId
@@ -74,6 +79,7 @@ Page({
   },
 
   onLoad() {
+    if (!disclaimer.ensureConsent()) return
     const profile = storage.getProfile() || {}
     this.setData({
       analyzing: true,
@@ -220,13 +226,19 @@ Page({
       }
     }
     const prev = storage.getProfile() || {}
+    const quality = require('../../../services/session-quality')
+    const today = quality.todayKey()
     storage.setProfile(
       Object.assign({}, prev, {
         planId: selectedId,
+        auxiliaries: normalizeAuxiliaries(prev.auxiliaries),
         weekSlotsOverride: {
           planId: selectedId,
           slots: serializeWeekSlots((chosen && chosen.weekSlots) || [])
         },
+        currentWeek: prev.currentWeek || 1,
+        trainingWeekStart: quality.mondayKey(today),
+        completedBlocks: prev.completedBlocks || 0,
         onboardedAt: Date.now()
       })
     )

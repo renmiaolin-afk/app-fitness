@@ -1,13 +1,14 @@
 const storage = require('./storage')
 
-/** 将微信头像/昵称写入本地档案 */
+/** 将微信头像/昵称写入本地档案（不覆盖已有头像/昵称） */
 function applyWechatUserInfo(userInfo) {
   if (!userInfo) return null
   const prev = storage.getProfile() || {}
   const patch = {}
   const nick = String(userInfo.nickName || '').trim()
-  if (nick) patch.displayName = nick
-  if (userInfo.avatarUrl) patch.avatarUrl = userInfo.avatarUrl
+  // 已有本地昵称/头像时不覆盖：getUserProfile 常返回默认灰头像与「微信用户」
+  if (nick && !prev.displayName) patch.displayName = nick
+  if (userInfo.avatarUrl && !prev.avatarUrl) patch.avatarUrl = userInfo.avatarUrl
   if (!Object.keys(patch).length) return prev
   const next = Object.assign({}, prev, patch)
   storage.setProfile(next)

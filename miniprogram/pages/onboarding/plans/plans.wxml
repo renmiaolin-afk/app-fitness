@@ -17,7 +17,7 @@
         bindtap="select"
       >
         <view class="hero-name">{{item.name}}</view>
-        <view class="hero-intro" wx:if="{{item.intro}}">{{item.intro}}</view>
+        <view class="hero-intro" wx:if="{{item.intro}}"><text>{{item.intro}}</text></view>
         <view
           class="week-row week-row-{{item.id}}"
           wx:if="{{item.weekCells.length}}"

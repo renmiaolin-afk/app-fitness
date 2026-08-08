@@ -14,7 +14,8 @@
     <view class="header">
       <view class="header-text">
         <view class="page-title">{{cycleName}}</view>
-        <view class="page-sub">第 {{week}} 周 · {{goalText}}</view>
+        <view class="page-sub">{{weekLine}}</view>
+        <view class="page-sub" wx:if="{{weekHint}}">{{weekHint}}</view>
       </view>
       <view class="avatar {{avatarUrl ? 'has-photo' : ''}}" bindtap="goMe" aria-role="button" aria-label="个人中心">
         <image
@@ -29,7 +30,7 @@
       <view
         wx:for="{{ui.slots}}"
         wx:key="weekday"
-        class="tab {{item.active ? 'active' : ''}}"
+        class="tab {{item.active ? 'active' : ''}} {{item.left ? 'left' : ''}} {{item.missed ? 'missed' : ''}} {{item.done ? 'done' : ''}}"
         data-index="{{index}}"
         bindtap="selectDay"
       >
@@ -57,27 +58,75 @@
 
     <view class="plan-card">
       <view class="card-top">
+        <view
+          class="quality-hero tone-{{ui.qualityTone || 'mid'}}"
+          wx:if="{{ui.showQualityBanner}}"
+        >
+          <view class="quality-hero-top">
+            <text class="quality-hero-kicker">{{ui.qualityKicker}}</text>
+            <text class="quality-hero-tag">{{ui.statusChip}}</text>
+          </view>
+          <view class="quality-hero-body">
+            <text class="quality-hero-title">{{ui.qualityTitle}}</text>
+            <view class="quality-hero-score" wx:if="{{ui.qualityScore != null}}">
+              <text class="quality-hero-score-num">{{ui.qualityScore}}</text>
+              <text class="quality-hero-score-unit">分</text>
+            </view>
+          </view>
+          <view
+            class="quality-hero-dur {{durationExpanded ? 'open' : ''}}"
+            wx:if="{{ui.showDuration}}"
+          >
+            <view
+              class="quality-hero-dur-head"
+              catchtap="toggleDuration"
+              aria-role="button"
+            >
+              <text class="quality-hero-dur-label">训练总时长</text>
+              <view class="quality-hero-dur-right">
+                <text class="quality-hero-dur-time">{{ui.durationText}}</text>
+                <view class="quality-hero-dur-toggle">
+                  <text class="quality-hero-dur-chev">{{durationExpanded ? '▴' : '▾'}}</text>
+                </view>
+              </view>
+            </view>
+            <view class="quality-hero-breakdown" wx:if="{{durationExpanded}}">
+              <block wx:if="{{ui.hasDurationItems}}">
+                <view
+                  class="quality-hero-breakdown-row"
+                  wx:for="{{ui.durationItems}}"
+                  wx:key="index"
+                >
+                  <text class="quality-hero-breakdown-name">{{item.title}}</text>
+                  <text class="quality-hero-breakdown-time">{{item.timeText}}</text>
+                </view>
+              </block>
+              <text class="quality-hero-breakdown-empty" wx:else>暂无分项用时记录</text>
+            </view>
+          </view>
+          <text class="quality-hero-note" wx:if="{{ui.qualityNote}}">{{ui.qualityNote}}</text>
+        </view>
+
         <block wx:if="{{ui.showSetCards}}">
           <view class="sec-head">
             <text class="sec-label">{{ui.secMainLabel}}</text>
           </view>
           <view class="set-cards">
             <view class="set-card tone-{{item.tone}}" wx:for="{{ui.mainCards}}" wx:key="index">
-              <view class="kg-plate {{item.plateClass}}">
-                <text class="kg-plate-num">{{item.kgText}}</text>
-                <text class="kg-plate-unit" wx:if="{{item.hasKg}}">kg</text>
-                <text class="kg-plate-unit" wx:elif="{{item.plateUnit}}">{{item.plateUnit}}</text>
+              <view class="set-card-order">
+                <text class="set-card-order-num">{{index + 1}}</text>
               </view>
               <view class="set-card-mid">
                 <view class="set-card-top">
                   <text class="set-card-name">{{item.name}}</text>
+                  <text class="status-chip" wx:if="{{item.showStatus && !ui.showQualityBanner}}">{{item.statusChip}}</text>
                 </view>
                 <text class="set-card-detail">{{item.detail}}</text>
               </view>
-              <text class="status-chip" wx:if="{{item.showStatus}}">{{item.statusChip}}</text>
-              <view class="set-card-sets">
-                <text class="sets-num">{{item.setsText}}</text>
-                <text class="sets-label">{{item.setsLabel}}</text>
+              <view class="kg-plate {{item.plateClass}}">
+                <text class="kg-plate-num">{{item.kgText}}</text>
+                <text class="kg-plate-unit" wx:if="{{item.hasKg}}">kg</text>
+                <text class="kg-plate-unit" wx:elif="{{item.plateUnit}}">{{item.plateUnit}}</text>
               </view>
             </view>
           </view>
@@ -88,10 +137,8 @@
             </view>
             <view class="set-cards">
               <view class="set-card tone-{{item.tone}}" wx:for="{{ui.accCards}}" wx:key="index">
-                <view class="kg-plate {{item.plateClass}}">
-                  <text class="kg-plate-num">{{item.kgText}}</text>
-                  <text class="kg-plate-unit" wx:if="{{item.hasKg}}">kg</text>
-                  <text class="kg-plate-unit" wx:elif="{{item.plateUnit}}">{{item.plateUnit}}</text>
+                <view class="set-card-order">
+                  <text class="set-card-order-num">{{index + 1}}</text>
                 </view>
                 <view class="set-card-mid">
                   <view class="set-card-top">
@@ -99,9 +146,10 @@
                   </view>
                   <text class="set-card-detail">{{item.detail}}</text>
                 </view>
-                <view class="set-card-sets">
-                  <text class="sets-num">{{item.setsText}}</text>
-                  <text class="sets-label">{{item.setsLabel}}</text>
+                <view class="kg-plate {{item.plateClass}}">
+                  <text class="kg-plate-num">{{item.kgText}}</text>
+                  <text class="kg-plate-unit" wx:if="{{item.hasKg}}">kg</text>
+                  <text class="kg-plate-unit" wx:elif="{{item.plateUnit}}">{{item.plateUnit}}</text>
                 </view>
               </view>
             </view>
@@ -131,20 +179,25 @@
     </view>
   </scroll-view>
 
-  <view class="footer">
-    <block wx:if="{{ui.showStart && ui.auxClosed}}">
+  <view class="footer" wx:if="{{ui.showLeaveActions || ui.showStart || ui.showRestActions || (!viewIsToday && !ui.isMissed && !ui.isLeave && !ui.isCompleted)}}">
+    <block wx:if="{{ui.showLeaveActions}}">
+      <view class="btn-link" bindtap="revokeLeave">撤销请假</view>
+    </block>
+    <block wx:elif="{{ui.showStart && ui.auxClosed}}">
       <view class="btn-link">{{ui.auxNote}}</view>
     </block>
     <block wx:elif="{{ui.showStart}}">
-      <button class="btn-primary" bindtap="start">{{ui.ctaText}}</button>
-      <view class="btn-link" wx:if="{{ui.hasDraft}}" bindtap="discardDraft">放弃未完成课次并重新开始</view>
+      <view class="footer-row" wx:if="{{ui.showLeaveLink}}">
+        <button class="btn-secondary footer-btn-side" bindtap="markLeave">今天请假</button>
+        <button class="btn-primary footer-btn-main" bindtap="start">{{ui.ctaText}}</button>
+      </view>
+      <button class="btn-primary" wx:else bindtap="start">{{ui.ctaText}}</button>
     </block>
     <block wx:elif="{{ui.showRestActions}}">
-      <button class="btn-outline" data-index="0" bindtap="selectDay">查看本周训练安排</button>
-      <view class="btn-link">补练请从周历选择对应训练日</view>
+      <button class="btn-outline" bindtap="goCycle">查看本周安排</button>
     </block>
     <block wx:else>
-      <view class="btn-link">非训练日不可开练，请到当天再开始</view>
+      <view class="btn-link">只能练今天的课，过去的不能补</view>
     </block>
   </view>
 </view>

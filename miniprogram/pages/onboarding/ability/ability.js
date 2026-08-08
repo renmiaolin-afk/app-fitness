@@ -1,5 +1,10 @@
 const storage = require('../../../utils/storage')
-const { inferStrengthTier, auxiliaries } = require('../../../services/plan')
+const {
+  inferStrengthTier,
+  auxiliaries,
+  normalizeAuxiliaries
+} = require('../../../services/plan')
+const disclaimer = require('../../../services/disclaimer')
 
 Page({
   data: {
@@ -13,8 +18,8 @@ Page({
     bench: 40,
     deadlift: 80,
     auxItems: [],
-    selectedAux: ['crossfit', 'running'],
-    maxAux: 2
+    selectedAux: ['crossfit'],
+    maxAux: 1
   },
 
   syncAuxItems(selected) {
@@ -72,8 +77,12 @@ Page({
 
   onLoad(query) {
     const fromMe = !!(query && query.from === 'me')
+    if (!fromMe && !disclaimer.hasValidConsent(storage.getProfile())) {
+      wx.redirectTo({ url: '/pages/onboarding/disclaimer/disclaimer' })
+      return
+    }
     const draft = storage.getProfile() || {}
-    const selectedAux = draft.auxiliaries || ['crossfit', 'running']
+    const selectedAux = normalizeAuxiliaries(draft.auxiliaries || ['crossfit'])
     this.setData({
       fromMe: fromMe,
       ctaLabel: fromMe ? '保存' : '下一步',
@@ -84,11 +93,11 @@ Page({
       squat: (draft.oneRm && draft.oneRm.squat) || 60,
       bench: (draft.oneRm && draft.oneRm.bench) || 40,
       deadlift: (draft.oneRm && draft.oneRm.deadlift) || 80,
-      maxAux: auxiliaries.maxSelect || 2
+      maxAux: auxiliaries.maxSelect || 1
     })
     this.syncMetrics()
     this.syncLifts()
-    this.syncAuxItems(selectedAux)
+    this.syncAuxItems(selectedAux.length ? selectedAux : ['crossfit'])
   },
 
   setGender(e) {
@@ -177,13 +186,11 @@ Page({
     let selected = (this.data.selectedAux || []).slice()
     const i = selected.indexOf(id)
     if (i >= 0) {
-      selected.splice(i, 1)
+      // 允许取消，变成不选辅助
+      selected = []
     } else {
-      if (selected.length >= this.data.maxAux) {
-        wx.showToast({ title: '最多选 ' + this.data.maxAux + ' 项', icon: 'none' })
-        return
-      }
-      selected.push(id)
+      // 单选：点新项即替换
+      selected = [id]
     }
     this.syncAuxItems(selected)
   },
@@ -210,7 +217,7 @@ Page({
       heightCm: heightCm,
       weightKg: weightKg,
       oneRm: oneRm,
-      auxiliaries: this.data.selectedAux,
+      auxiliaries: normalizeAuxiliaries(this.data.selectedAux),
       currentWeek: prev.currentWeek || 1
     }
     profilePatch.strengthTier = inferStrengthTier(

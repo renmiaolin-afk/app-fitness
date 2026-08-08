@@ -1,31 +1,65 @@
-<ambient-glow />
+<ambient-glow intensity="{{glowIntensity}}" />
+
+
 <view class="train" style="padding-top: {{navPadTop}}px;">
   <view class="top">
-    <view class="close" bindtap="openExit">✕</view>
-    <view class="name">{{title}}</view>
-    <view class="dots">
+    <text class="phase-label" wx:if="{{phaseLabel}}">{{phaseLabel}}</text>
+    <text class="name">{{title}}</text>
+    <view class="progress" wx:if="{{dotsCompact}}">
+      <view class="progress-track">
+        <view class="progress-fill" style="width: {{progressPct}}%;"></view>
+      </view>
+      <text class="progress-label">{{progressLabel}}</text>
+    </view>
+    <view class="dots" wx:else>
       <view wx:for="{{dots}}" wx:key="index" class="dot {{item}}"></view>
     </view>
     <view class="sub">{{subText}}</view>
   </view>
 
   <view class="mid">
-    <view class="zone">{{zoneText}}</view>
-    <view class="timer">{{timerText}}</view>
-    <view class="hint">{{hint}}</view>
+    <view
+      class="ring {{timerHot ? 'hot' : ''}} {{paused ? 'paused' : ''}}"
+      style="background: conic-gradient(from -90deg, {{ringColor}} {{ringPct}}%, rgba(255,255,255,0.12) 0);"
+    >
+      <view class="ring-inner">
+        <text class="ring-time" style="color: {{ringColor}};">{{timerText}}</text>
+        <text class="ring-hint">{{zoneText}}</text>
+      </view>
+    </view>
+    <view class="howto" wx:if="{{howto}}">{{howto}}</view>
+    <view class="load" wx:if="{{loadText}}">{{loadText}}</view>
   </view>
 
   <view class="bottom">
-    <button class="btn-primary" bindtap="next">{{cta}}</button>
+    <view class="cta-row">
+      <view
+        class="btn-side icon"
+        bindtap="togglePause"
+        aria-role="button"
+        aria-label="{{paused ? '继续' : '暂停'}}"
+      >{{paused ? '▶' : '⏸'}}</view>
+      <button
+        class="btn-primary cta-main {{canComplete ? '' : 'locked'}}"
+        bindtap="next"
+        disabled="{{!canComplete}}"
+      >{{completeLabel}}</button>
+      <view class="btn-side icon" bindtap="openExit" aria-role="button" aria-label="关闭">✕</view>
+    </view>
   </view>
 
-  <view class="mask" wx:if="{{showExit}}" catchtouchmove="noop">
-    <view class="sheet">
-      <view class="sheet-title">结束这次训练？</view>
-      <view class="sheet-desc">已完成的段落会保留，可从今日继续。</view>
-      <button class="btn-primary" bindtap="saveExit">保存并退出</button>
-      <button class="btn-dark" bindtap="closeExit">继续训练</button>
-      <view class="btn-ghost light" bindtap="discardExit">不保存，直接退出</view>
+  <view class="mask" wx:if="{{showExit}}" catchtouchmove="noop" bindtap="closeExit">
+    <view class="sheet" catchtap="noop">
+      <view class="sheet-handle"></view>
+      <view class="sheet-title">要离开训练吗？</view>
+      <view class="sheet-desc">已完成的段会保存，今天还能接着练。</view>
+      <view class="sheet-actions">
+        <view class="sheet-row">
+          <button class="sheet-btn sheet-btn-primary" bindtap="closeExit">继续练</button>
+          <button class="sheet-btn sheet-btn-secondary" bindtap="saveExit">先离开，稍后继续</button>
+        </view>
+        <view class="sheet-btn-danger" bindtap="discardExit">放弃本次，不保存</view>
+      </view>
     </view>
   </view>
 </view>

@@ -182,7 +182,7 @@ function buildMainSetPlan(main) {
     pushWarmups(plan, pressOneRm, 1, 0.55)
     var sets = Math.max(3, Number(main.sets) || 4)
     var reps = Number(main.reps) || 6
-    pushBlock(plan, '肩推', sets, reps, pressKg, 150)
+    pushBlock(plan, '肩背', sets, reps, pressKg, 150)
     return plan
   }
 
@@ -200,15 +200,16 @@ function countByKind(plan, kind) {
 
 function rowLabel(set) {
   if (!set) return '正式组'
+  if (set.kind === 'accessory') return '辅项'
   if (set.kind === 'warmup' || set.block === 'warmup') return '热身组'
   // 挪威波浪：70% 容量 → 80% 强度 → 70% 回退
   if (set.block === '4x4') return '容量组'
   if (set.block === '2x2') return '强度组'
   if (set.block === '1x8') return '回退组'
-  // 线性 5×5 / 肩推
+  // 线性 5×5 / 肩背
   if (set.block === '5x5') return '正式组'
   if (set.block === '1x5') return '正式组'
-  if (set.block === '肩推') return '正式组'
+  if (set.block === '肩背' || set.block === '肩推') return '正式组'
   // 5/3/1
   if (set.block === '爬坡') return '爬坡组'
   if (set.block === '顶组') return '顶峰组'
@@ -296,20 +297,67 @@ function formatMainSetGroups(main) {
   return groups
 }
 
-/** 扁平处方表行，便于表格渲染 */
+/**
+ * 扁平处方表：每组一行（与训练执行 setPlan 一一对照）
+ */
 function formatMainSetSheet(main) {
-  var groups = formatMainSetGroups(main)
+  var plan = buildMainSetPlan(main)
   var sheet = []
-  for (var i = 0; i < groups.length; i++) {
-    for (var j = 0; j < groups[i].rows.length; j++) {
-      sheet.push(groups[i].rows[j])
-    }
+  for (var i = 0; i < plan.length; i++) {
+    var cur = plan[i]
+    var tone = 'work'
+    if (cur.kind === 'warmup' || cur.block === 'warmup') tone = 'warmup'
+    else if (cur.block === '2x2' || cur.block === '顶组') tone = 'peak'
+    else if (cur.block === '1x8' || cur.block === '回退' || cur.block === '轻周') tone = 'backoff'
+    var label = rowLabel(cur)
+    sheet.push({
+      label: label,
+      phase: label,
+      tone: tone,
+      kg: cur.kg,
+      reps: cur.reps,
+      count: 1,
+      kgText: String(cur.kg),
+      repsText: String(cur.reps),
+      countText: '1',
+      setsText: '1组 × ' + cur.reps + '次 · ' + cur.kg + ' kg',
+      showPhase: true,
+      kind: cur.kind || 'work',
+      block: cur.block || ''
+    })
   }
   return sheet
 }
 
+/** 辅项也拆成逐组计划，接在主项 setPlan 后 */
+function buildAccessorySetPlan(accessories) {
+  var plan = []
+  var list = accessories || []
+  for (var i = 0; i < list.length; i++) {
+    var a = list[i] || {}
+    var sets = Math.max(1, Math.min(16, Number(a.sets) || 1))
+    var reps = a.reps != null && a.reps !== '' ? a.reps : 8
+    var hasKg = a.kg != null && a.kg !== '' && !isNaN(Number(a.kg))
+    var kg = hasKg ? Number(a.kg) : 0
+    var name = a.name || '辅项'
+    for (var s = 0; s < sets; s++) {
+      plan.push({
+        kind: 'accessory',
+        block: name,
+        moveName: name,
+        kg: kg,
+        reps: reps,
+        restSec: 90,
+        bodyweight: !hasKg
+      })
+    }
+  }
+  return plan
+}
+
 module.exports = {
   buildMainSetPlan: buildMainSetPlan,
+  buildAccessorySetPlan: buildAccessorySetPlan,
   countByKind: countByKind,
   rowLabel: rowLabel,
   formatMainSetRows: formatMainSetRows,

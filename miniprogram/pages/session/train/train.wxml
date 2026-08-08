@@ -1,29 +1,38 @@
-<ambient-glow />
+<ambient-glow intensity="{{glowIntensity}}" />
+
+
 <view class="train" style="padding-top: {{navPadTop}}px;">
   <view class="top">
-    <view class="close" bindtap="openExit">✕</view>
-    <view class="top-main">
-      <text class="name">{{name}}</text>
-      <view class="dots">
-        <view wx:for="{{dots}}" wx:key="index" class="dot {{item}}"></view>
+    <text class="phase-label" wx:if="{{phaseLabel}}">{{phaseLabel}}</text>
+    <text class="name">{{name}}</text>
+    <view class="progress" wx:if="{{dotsCompact}}">
+      <view class="progress-track">
+        <view class="progress-fill" style="width: {{progressPct}}%;"></view>
       </view>
-      <view class="sub">{{subText}}</view>
+      <text class="progress-label">{{progressLabel}}</text>
     </view>
+    <view class="dots" wx:else>
+      <view wx:for="{{dots}}" wx:key="index" class="dot {{item}}"></view>
+    </view>
+    <view class="sub">{{subText}}</view>
   </view>
 
   <view class="mid">
     <view
-      class="ring {{timerHot ? 'hot' : ''}} {{phase === 'rest' ? 'rest' : ''}}"
+      class="ring {{timerHot ? 'hot' : ''}} {{phase === 'rest' ? 'rest' : ''}} {{paused ? 'paused' : ''}}"
       style="background: conic-gradient(from -90deg, {{ringColor}} {{ringPct}}%, rgba(255,255,255,0.12) 0);"
     >
       <view class="ring-inner">
-        <text class="ring-time">{{displayTime}}</text>
+        <text class="ring-time" style="color: {{ringColor}};">{{displayTime}}</text>
         <text class="ring-hint">{{unitHint}}</text>
       </view>
     </view>
 
     <view class="load">
-      <view class="kg-row">
+      <view class="kg-row" wx:if="{{kgLabel}}">
+        <text class="kg">{{kgLabel}}</text>
+      </view>
+      <view class="kg-row" wx:else>
         <text class="kg">{{kg}}</text>
         <text class="kg-unit">KG</text>
       </view>
@@ -32,14 +41,35 @@
   </view>
 
   <view class="bottom">
-    <button class="btn-primary" wx:if="{{phase === 'ready'}}" bindtap="startSet" disabled="{{showCountdown}}">开始本组</button>
+    <block wx:if="{{phase === 'ready'}}">
+      <view class="cta-row">
+        <view class="btn-side ghost"></view>
+        <button class="btn-primary cta-main" bindtap="startSet" disabled="{{showCountdown}}">开始本组</button>
+        <view class="btn-side icon" bindtap="openExit" aria-role="button" aria-label="关闭">✕</view>
+      </view>
+    </block>
     <block wx:elif="{{phase === 'working'}}">
-      <button class="btn-primary" bindtap="endSet">结束本组</button>
-      <view class="btn-ghost light" bindtap="togglePause">{{pauseText}}</view>
+      <view class="cta-row">
+        <view
+          class="btn-side icon"
+          bindtap="togglePause"
+          aria-role="button"
+          aria-label="{{paused ? '继续' : '暂停'}}"
+        >{{paused ? '▶' : '⏸'}}</view>
+        <button
+          class="btn-primary cta-main {{canComplete ? '' : 'locked'}}"
+          bindtap="endSet"
+          disabled="{{!canComplete}}"
+        >{{completeLabel}}</button>
+        <view class="btn-side icon" bindtap="openExit" aria-role="button" aria-label="关闭">✕</view>
+      </view>
     </block>
     <block wx:else>
-      <button class="btn-primary" bindtap="nextSet" disabled="{{showCountdown}}">开始下一组</button>
-      <view class="btn-ghost light" bindtap="addRest">+20 秒</view>
+      <view class="cta-row">
+        <view class="btn-side" bindtap="addRest">+20</view>
+        <button class="btn-primary cta-main" bindtap="nextSet" disabled="{{showCountdown}}">下一组</button>
+        <view class="btn-side icon" bindtap="openExit" aria-role="button" aria-label="关闭">✕</view>
+      </view>
     </block>
   </view>
 
@@ -48,15 +78,18 @@
     <view class="countdown-label">准备开始</view>
   </view>
 
-  <view class="mask" wx:if="{{showExit}}" catchtouchmove="noop">
-    <view class="sheet">
-      <view class="sheet-title">结束本次训练？</view>
-      <view class="sheet-desc">已完成组将保留，可从中断处继续。</view>
-      <button class="btn-primary" bindtap="saveExit">保存并退出</button>
-      <button class="btn-dark" bindtap="closeExit">继续训练</button>
-      <view class="btn-ghost light" bindtap="discardExit">不保存，直接退出</view>
+  <view class="mask" wx:if="{{showExit}}" catchtouchmove="noop" bindtap="closeExit">
+    <view class="sheet" catchtap="noop">
+      <view class="sheet-handle"></view>
+      <view class="sheet-title">要离开训练吗？</view>
+      <view class="sheet-desc">已完成的组会保存，今天还能接着练。</view>
+      <view class="sheet-actions">
+        <view class="sheet-row">
+          <button class="sheet-btn sheet-btn-primary" bindtap="closeExit">继续练</button>
+          <button class="sheet-btn sheet-btn-secondary" bindtap="saveExit">先离开，稍后继续</button>
+        </view>
+        <view class="sheet-btn-danger" bindtap="discardExit">放弃本次，不保存</view>
+      </view>
     </view>
   </view>
-
-  <move-sheet show="{{moveSheetShow}}" move-name="{{name}}" bind:close="closeMoveSheet" />
 </view>

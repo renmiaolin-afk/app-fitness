@@ -2,7 +2,7 @@
   "navigationStyle": "custom",
   "navigationBarTextStyle": "white",
   "usingComponents": {
-    "move-sheet": "/components/move-sheet/move-sheet"
+    "ambient-glow": "/components/ambient-glow/ambient-glow"
   },
   "disableScroll": true
 }

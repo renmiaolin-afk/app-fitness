@@ -1,73 +1,159 @@
-<view class="page safe-bottom" style="padding-top: {{navPadTop}}px;" wx:if="{{ready}}">
+<view class="page page-dock safe-bottom" style="padding-top: {{navPadTop}}px;" wx:if="{{ready}}">
   <view class="nav">
     <view class="nav-back" bindtap="goBack" aria-role="button" aria-label="返回">
       <text class="nav-back-chev">‹</text>
     </view>
   </view>
 
-  <view class="intro">
-    <view class="intro-name">{{cycleName}}</view>
+  <scroll-view
+    scroll-y
+    class="page-scroll"
+    enhanced="{{true}}"
+    show-scrollbar="{{false}}"
+    enable-flex="{{true}}"
+  >
+    <view class="intro">
+      <view class="intro-name">{{cycleName}}</view>
 
-    <view class="fact">
-      <text class="fact-k">目标</text>
-      <text class="fact-v">{{goalTarget}}</text>
-      <text class="fact-v sub" wx:if="{{goalHint}}">{{goalHint}}</text>
-    </view>
-  </view>
-
-  <view class="week {{item.current ? 'on' : ''}}" wx:for="{{weeks}}" wx:key="week">
-    <view class="week-h">
-      <text class="week-t">{{item.head}}</text>
-      <text class="week-tag" wx:if="{{item.current}}">进行中</text>
-    </view>
-
-    <view class="day {{day.kind}}" wx:for="{{item.days}}" wx:for-item="day" wx:key="dayLabel">
-      <text class="wd">{{day.dayLabel}}</text>
-      <view class="body">
-        <block wx:if="{{day.kind === 'strength'}}">
-          <text class="sec-label">主项</text>
-          <view class="main-row">
-            <text class="t">{{day.mainName}}</text>
-            <text class="sets">{{day.mainSets}}</text>
-          </view>
-          <block wx:if="{{day.accessories.length}}">
-            <text class="sec-label acc">辅项</text>
-            <view class="acc-row" wx:for="{{day.accessories}}" wx:for-item="acc" wx:key="name">
-              <text class="acc-n">{{acc.name}}</text>
-              <text class="acc-s">{{acc.setsText}}</text>
-            </view>
-          </block>
-        </block>
-        <block wx:elif="{{day.kind === 'rest'}}">
-          <text class="sec-label">休息</text>
-          <text class="t muted">{{day.mainName}}</text>
-        </block>
-        <block wx:elif="{{day.layout === 'main-wod'}}">
-          <text class="sec-label">主项</text>
-          <view class="main-row">
-            <text class="t">{{day.mainName}}</text>
-            <text class="sets" wx:if="{{day.mainSets}}">{{day.mainSets}}</text>
-          </view>
-          <block wx:if="{{day.accessories.length}}">
-            <text class="sec-label acc">辅项 · WOD</text>
-            <view class="acc-row" wx:for="{{day.accessories}}" wx:for-item="acc" wx:key="name">
-              <text class="acc-n">{{acc.name}}</text>
-              <text class="acc-s">{{acc.setsText}}</text>
-            </view>
-          </block>
-        </block>
-        <block wx:else>
-          <text class="sec-label">调节</text>
-          <view class="main-row">
-            <text class="t">{{day.mainName}}</text>
-            <text class="sets" wx:if="{{day.mainSets}}">{{day.mainSets}}</text>
-          </view>
-          <view class="acc-row" wx:for="{{day.accessories}}" wx:for-item="acc" wx:key="name">
-            <text class="acc-n">{{acc.name}}</text>
-            <text class="acc-s">{{acc.setsText}}</text>
-          </view>
-        </block>
+      <view class="fact">
+        <text class="fact-k">目标</text>
+        <text class="fact-v">{{goalTarget}}</text>
+        <text class="fact-v sub" wx:if="{{goalHint}}">{{goalHint}}</text>
       </view>
     </view>
-  </view>
+
+    <view class="week {{item.current ? 'on' : ''}}" wx:for="{{weeks}}" wx:key="week">
+      <view class="week-h">
+        <text class="week-t">{{item.head}}</text>
+        <text class="week-tag" wx:if="{{item.current}}">进行中</text>
+      </view>
+
+      <view
+        class="day {{day.kind}}"
+        wx:for="{{item.days}}"
+        wx:for-item="day"
+        wx:for-index="dayIndex"
+        wx:key="dayLabel"
+      >
+        <text class="wd">{{day.dayLabel}}</text>
+        <view class="day-body">
+          <block wx:if="{{day.showSetCards}}">
+            <view
+              class="quality-hero tone-{{day.qualityTone || 'mid'}}"
+              wx:if="{{day.showQualityBanner}}"
+            >
+              <view class="quality-hero-top">
+                <text class="quality-hero-kicker">{{day.qualityKicker}}</text>
+                <text class="quality-hero-tag">{{day.statusChip}}</text>
+              </view>
+              <view class="quality-hero-body">
+                <text class="quality-hero-title">{{day.qualityTitle}}</text>
+                <view class="quality-hero-score" wx:if="{{day.qualityScore != null}}">
+                  <text class="quality-hero-score-num">{{day.qualityScore}}</text>
+                  <text class="quality-hero-score-unit">分</text>
+                </view>
+              </view>
+              <view
+                class="quality-hero-dur {{day.durationExpanded ? 'open' : ''}}"
+                wx:if="{{day.showDuration}}"
+              >
+                <view
+                  class="quality-hero-dur-head"
+                  data-week="{{index}}"
+                  data-day="{{dayIndex}}"
+                  catchtap="toggleDuration"
+                  aria-role="button"
+                >
+                  <text class="quality-hero-dur-label">训练总时长</text>
+                  <view class="quality-hero-dur-right">
+                    <text class="quality-hero-dur-time">{{day.durationText}}</text>
+                    <view class="quality-hero-dur-toggle">
+                      <text class="quality-hero-dur-chev">{{day.durationExpanded ? '▴' : '▾'}}</text>
+                    </view>
+                  </view>
+                </view>
+                <view class="quality-hero-breakdown" wx:if="{{day.durationExpanded}}">
+                  <block wx:if="{{day.hasDurationItems}}">
+                    <view
+                      class="quality-hero-breakdown-row"
+                      wx:for="{{day.durationItems}}"
+                      wx:for-item="dItem"
+                      wx:key="index"
+                    >
+                      <text class="quality-hero-breakdown-name">{{dItem.title}}</text>
+                      <text class="quality-hero-breakdown-time">{{dItem.timeText}}</text>
+                    </view>
+                  </block>
+                  <text class="quality-hero-breakdown-empty" wx:else>暂无分项用时记录</text>
+                </view>
+              </view>
+              <text class="quality-hero-note" wx:if="{{day.qualityNote}}">{{day.qualityNote}}</text>
+            </view>
+            <view class="sec-head">
+              <text class="sec-label">{{day.secMainLabel}}</text>
+            </view>
+            <view class="set-cards">
+              <view class="set-card tone-{{card.tone}}" wx:for="{{day.mainCards}}" wx:for-item="card" wx:key="index">
+                <view class="set-card-order">
+                  <text class="set-card-order-num">{{index + 1}}</text>
+                </view>
+                <view class="set-card-mid">
+                  <view class="set-card-top">
+                    <text class="set-card-name">{{card.name}}</text>
+                  </view>
+                  <text class="set-card-detail">{{card.detail}}</text>
+                </view>
+                <view class="kg-plate {{card.plateClass}}">
+                  <text class="kg-plate-num">{{card.kgText}}</text>
+                  <text class="kg-plate-unit" wx:if="{{card.hasKg}}">kg</text>
+                  <text class="kg-plate-unit" wx:elif="{{card.plateUnit}}">{{card.plateUnit}}</text>
+                </view>
+              </view>
+            </view>
+
+            <block wx:if="{{day.accCards.length}}">
+              <view class="sec-head sec-gap">
+                <text class="sec-label">{{day.secAccLabel}}</text>
+              </view>
+              <view class="set-cards">
+                <view class="set-card tone-{{card.tone}}" wx:for="{{day.accCards}}" wx:for-item="card" wx:key="index">
+                  <view class="set-card-order">
+                    <text class="set-card-order-num">{{index + 1}}</text>
+                  </view>
+                  <view class="set-card-mid">
+                    <view class="set-card-top">
+                      <text class="set-card-name">{{card.name}}</text>
+                    </view>
+                    <text class="set-card-detail">{{card.detail}}</text>
+                  </view>
+                  <view class="kg-plate {{card.plateClass}}">
+                    <text class="kg-plate-num">{{card.kgText}}</text>
+                    <text class="kg-plate-unit" wx:if="{{card.hasKg}}">kg</text>
+                    <text class="kg-plate-unit" wx:elif="{{card.plateUnit}}">{{card.plateUnit}}</text>
+                  </view>
+                </view>
+              </view>
+            </block>
+          </block>
+
+          <block wx:elif="{{day.isRest}}">
+            <view class="sec-head">
+              <text class="sec-label">休息日</text>
+            </view>
+            <view class="main-left">
+              <text class="main-name">主动恢复</text>
+            </view>
+            <view class="acc-label sec-gap">{{day.restNote}}</view>
+          </block>
+
+          <block wx:else>
+            <view class="sec-head">
+              <text class="sec-label">{{day.secMainLabel || day.mainName || '调节'}}</text>
+            </view>
+            <view class="acc-label">{{day.auxNote}}</view>
+          </block>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
 </view>

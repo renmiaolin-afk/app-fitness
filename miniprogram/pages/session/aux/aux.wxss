@@ -12,35 +12,45 @@
 
 .top {
   text-align: center;
-  position: relative;
   padding-top: var(--s1);
+  flex-shrink: 0;
 }
 
-.close {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 64rpx;
-  height: 64rpx;
-  border-radius: 50%;
-  background: var(--dark-chip);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--fs-md);
+.phase-label {
+  display: block;
+  font-size: 22rpx;
+  font-weight: 700;
+  letter-spacing: 2rpx;
+  color: rgba(235, 235, 245, 0.5);
+  margin-bottom: 8rpx;
 }
 
 .name {
+  display: block;
   font-size: var(--fs-lg);
   font-weight: 700;
-  padding-top: var(--s1);
+  line-height: 1.2;
+  padding: 0 var(--s2);
+}
+
+.howto {
+  max-width: 100%;
+  padding: 0 var(--s3);
+  font-size: 30rpx;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  text-align: center;
+  line-height: 1.45;
 }
 
 .dots {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: var(--s2);
-  margin-top: var(--s3);
+  gap: 10rpx;
+  margin-top: var(--s2);
+  max-width: 100%;
+  padding: 0 var(--s2);
 }
 
 .dot {
@@ -55,35 +65,101 @@
   background: var(--accent);
 }
 
+.progress {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10rpx;
+  margin-top: var(--s2);
+  padding: 0 var(--s4);
+}
+
+.progress-track {
+  width: 100%;
+  max-width: 420rpx;
+  height: 8rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 999rpx;
+  background: var(--accent);
+}
+
+.progress-label {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: rgba(235, 235, 245, 0.7);
+  font-variant-numeric: tabular-nums;
+}
+
 .sub {
   margin-top: var(--s2);
   color: var(--dark-muted);
   font-size: var(--fs-sm);
+  font-weight: 500;
+  padding: 0 var(--s2);
 }
 
 .mid {
   flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28rpx;
+  padding: var(--s3) 0;
+}
+
+.ring {
+  width: 400rpx;
+  height: 400rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: none;
+}
+
+.ring-inner {
+  width: 360rpx;
+  height: 360rpx;
+  border-radius: 50%;
+  background: var(--dark);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 }
 
-.zone {
-  color: var(--accent);
-  font-size: var(--fs-md);
-  font-weight: 600;
-  margin-bottom: var(--s2);
-}
-
-.timer {
-  font-size: var(--fs-xl);
+.ring-time {
+  font-size: 92rpx;
   font-weight: 700;
   line-height: 1;
+  letter-spacing: -1rpx;
+  color: rgba(255, 255, 255, 0.72);
+  font-variant-numeric: tabular-nums;
+}
+
+.ring-hint {
+  margin-top: 16rpx;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--dark-muted);
+}
+
+.load {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: #fff;
 }
 
 .hint {
-  margin-top: var(--s4);
   color: var(--dark-muted);
   font-size: var(--fs-md);
   text-align: center;
@@ -93,8 +169,41 @@
 
 .bottom {
   flex-shrink: 0;
-  margin-top: auto;
   padding-bottom: calc(var(--s3) + env(safe-area-inset-bottom));
+}
+
+.cta-row {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 12rpx;
+}
+
+.btn-side {
+  flex-shrink: 0;
+  width: 112rpx;
+  min-height: var(--btn-h);
+  padding: 0 8rpx;
+  border-radius: var(--btn-r);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(235, 235, 245, 0.85);
+  font-size: 26rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.btn-side.icon {
+  font-size: 40rpx;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.cta-main {
+  flex: 1;
+  min-width: 0;
 }
 
 .btn-primary {
@@ -109,11 +218,19 @@
   white-space: nowrap;
 }
 
+.btn-primary.locked,
+.btn-primary[disabled] {
+  opacity: 0.42;
+  background: rgba(255, 255, 255, 0.18) !important;
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+
 .btn-ghost.light {
   color: var(--dark-muted);
-  text-align: center;
   margin-top: var(--s2);
+  text-align: center;
   font-size: var(--fs-md);
+  padding: var(--s1) 0;
 }
 
 .mask {
@@ -132,39 +249,88 @@
   width: 100%;
   background: var(--dark-elev);
   border-radius: var(--r-xl) var(--r-xl) 0 0;
-  padding: var(--s4) var(--s4) calc(var(--s4) + env(safe-area-inset-bottom));
+  padding: 20rpx var(--s4) calc(var(--s4) + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+.sheet-handle {
+  width: 64rpx;
+  height: 8rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.22);
+  margin: 0 auto 28rpx;
 }
 
 .sheet-title {
   font-size: var(--fs-lg);
   font-weight: 700;
+  color: #fff;
+  text-align: center;
 }
 
 .sheet-desc {
-  margin: var(--s2) 0 var(--s4);
+  margin: 12rpx 0 36rpx;
   color: var(--dark-muted);
   font-size: var(--fs-md);
   line-height: 1.45;
+  text-align: center;
 }
 
-.btn-dark {
-  margin-top: var(--s2);
+.sheet-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.sheet-row {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 16rpx;
+}
+
+.sheet-btn {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+  margin: 0 !important;
   min-height: var(--btn-h);
   height: auto;
   border-radius: var(--btn-r);
-  background: var(--dark-chip);
-  color: #fff;
   font-size: var(--fs-md);
   font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
-  line-height: 1.2;
-  padding: var(--btn-pad-y) var(--btn-pad-x);
+  line-height: 1.25;
+  padding: 24rpx 16rpx;
   box-sizing: border-box;
-  white-space: nowrap;
+  border: none;
+  white-space: normal;
+  text-align: center;
 }
 
-.btn-dark::after {
+.sheet-btn::after {
   border: none;
+}
+
+.sheet-btn-primary {
+  background: var(--accent);
+  background-image: var(--grad-accent);
+  color: #fff;
+}
+
+.sheet-btn-secondary {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.sheet-btn-danger {
+  margin-top: 8rpx;
+  padding: 20rpx 0 8rpx;
+  text-align: center;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: rgba(255, 69, 58, 0.78);
+  line-height: 1.3;
 }

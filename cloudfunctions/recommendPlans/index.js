@@ -6,28 +6,34 @@ const cloud = require('wx-server-sdk')
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 
-/** 与 plans/scheduling/week-slots.json 的 name/meta 保持一致 */
 const CATALOG = [
   {
     id: 'strength-hybrid-mix',
-    name: '挪威力训计划',
-    meta: '12周 · 4×4/2×2/1×8 + 每周肩推专项；硬拉重/轻双日',
-    problem: '挪威课内波浪：70% 4×4 → 80% 2×2 → 70% 1×8；另有肩推日补肩背。',
-    goal: '恢复好、能练满的中高级首选。'
+    name: '挪威高频',
+    meta: '每周蹲推拉更密 + 肩背；恢复好时三大项涨得最快',
+    problem: '练什么：挪威波浪（4×4→2×2→1×8）高频蹲推拉，另加肩背日与轻拉日。',
+    goal: '练完会怎样：恢复跟得上时，三大项上涨通常最快。'
   },
   {
     id: 'strength-linear',
-    name: '线性 5×5 计划',
-    meta: '12周 · 蹲卧5×5、硬拉1×5 + 每周肩推专项',
-    problem: '死组 5×5（硬拉 1×5）+ 肩推日——新手到早中级最稳。',
-    goal: '结构简单，连续加重更可控。'
+    name: '线性加重',
+    meta: '蹲卧 5×5、硬拉 1×5 + 肩背；结构简单，适合连续进步',
+    problem: '练什么：深蹲/卧推 5×5、硬拉 1×5，外加一天肩背（实力推+引体）。',
+    goal: '练完会怎样：适合打基础，每周能稳定看到重量往上走。'
   },
   {
     id: 'strength-time-efficient',
-    name: '5/3/1 力量计划',
-    meta: '12周 · 5/3/1 顶组周循环 + 每周肩推专项',
-    problem: '温德勒 5/3/1 + 肩推日：三力各一天，时间紧也能长期涨。',
-    goal: '省时、护恢复，适合持续练下去。'
+    name: '省时顶组',
+    meta: '5/3/1 顶组循环 + 肩背；单次更短，护恢复可长期练',
+    problem: '练什么：5/3/1 顶组为主，三力各一天 + 肩背日，单次更短。',
+    goal: '练完会怎样：时间紧也能长期坚持，力量缓慢但持续上涨。'
+  },
+  {
+    id: 'strength-build',
+    name: '四天力量',
+    meta: '蹲 / 推 / 拉 / 肩各一天；力量上涨同时练得更厚实',
+    problem: '练什么：蹲、卧推、硬拉、肩背四天拆开练，组数容量更足。',
+    goal: '练完会怎样：三大项继续涨，同时肩背腿围度更饱满、看着更厚。'
   }
 ]
 
@@ -64,10 +70,9 @@ function estimateOutcome(profile, planId) {
   var aux = (profile && profile.auxiliaries) || []
   var high = 0
   for (var i = 0; i < aux.length; i++) {
-    if (aux[i] === 'crossfit' || aux[i] === 'hyrox') high++
+    if (aux[i] === 'crossfit' || aux[i] === 'hyrox' || aux[i] === 'athx') high++
   }
-  if (high >= 2) m *= 0.85
-  else if (high === 1) m *= 0.92
+  if (high >= 1) m *= 0.92
   var habits = (profile && profile.habits) || {}
   if (habits.sleep === 'poor') m *= 0.85
   else if (habits.sleep === 'ok') m *= 0.95
@@ -75,6 +80,7 @@ function estimateOutcome(profile, planId) {
   else if (habits.body === 'old') m *= 0.95
   if (planId === 'strength-time-efficient') m *= 0.9
   if (planId === 'strength-linear') m *= 1.05
+  if (planId === 'strength-build') m *= 1.02
   m = Math.max(0.5, Math.min(1.15, m))
 
   var rates = TIER_RATE[tier] || TIER_RATE.intermediate
@@ -89,11 +95,17 @@ function estimateOutcome(profile, planId) {
   })
   if (midRaw <= 0) return '录入三大项 1RM 后可估算本周期增幅'
   var low = roundToStep(midRaw * 0.6, 2.5)
-  var high = roundToStep(midRaw * 1.25, 2.5)
-  if (high < 2.5) high = 2.5
-  if (high < low) high = low
-  if (low === high) return '估算合计约 +' + high + ' kg'
-  return '估算合计约 +' + low + '–' + high + ' kg'
+  var highV = roundToStep(midRaw * 1.25, 2.5)
+  if (highV < 2.5) highV = 2.5
+  if (highV < low) highV = low
+  if (low === highV) return '估算合计约 +' + highV + ' kg'
+  return '估算合计约 +' + low + '–' + highV + ' kg'
+}
+
+function isPlanEligible(planId, profile) {
+  var tier = (profile && profile.strengthTier) || 'intermediate'
+  if (planId === 'strength-linear' && tier === 'advanced') return false
+  return true
 }
 
 function scorePlan(planId, profile) {
@@ -105,10 +117,40 @@ function scorePlan(planId, profile) {
   var tier = (profile && profile.strengthTier) || 'intermediate'
   var sleep = habits.sleep || 'ok'
   var body = habits.body || 'none'
+  var effort = habits.effort || 'solid'
   var age = Number(profile && profile.ageYears) || 28
-  var highAux = 0
-  for (var i = 0; i < aux.length; i++) {
-    if (aux[i] === 'crossfit' || aux[i] === 'hyrox' || aux[i] === 'running') highAux++
+  var hasAux = aux.length >= 1
+
+  if (effort === 'easy') {
+    if (planId === 'strength-time-efficient') {
+      score += 36
+      reasons.push('你想轻松练练，省时顶组最不容易练崩')
+    }
+    if (planId === 'strength-linear') {
+      score += 18
+      reasons.push('线性结构简单，适合轻松把习惯养住')
+    }
+    if (planId === 'strength-build') score -= 22
+    if (planId === 'strength-hybrid-mix') score -= 28
+  } else if (effort === 'hard') {
+    if (planId === 'strength-hybrid-mix') {
+      score += 32
+      reasons.push('你想拼一把，挪威高频更能吃满涨力窗口')
+    }
+    if (planId === 'strength-build') {
+      score += 26
+      reasons.push('四天容量足，适合想认真堆进度的阶段')
+    }
+    if (planId === 'strength-time-efficient') score -= 14
+    if (planId === 'strength-linear' && tier !== 'beginner') score -= 6
+  } else {
+    if (planId === 'strength-linear') {
+      score += 14
+      reasons.push('好好练时，线性加重清晰好执行')
+    }
+    if (planId === 'strength-build') score += 12
+    if (planId === 'strength-hybrid-mix') score += 8
+    if (planId === 'strength-time-efficient') score += 6
   }
 
   if (planId === 'strength-time-efficient') {
@@ -129,7 +171,6 @@ function scorePlan(planId, profile) {
       score += 12
       reasons.push('年龄偏大，顶组周期更易长期坚持')
     }
-    if (aux.length >= 2) score -= 4
   }
 
   if (planId === 'strength-linear') {
@@ -143,21 +184,36 @@ function scorePlan(planId, profile) {
       score -= 12
       reasons.push('相对力量已高，纯线性空间有限')
     }
-    if (aux.length <= 1) {
-      score += 20
-      reasons.push('辅助较少，适合死组线性加重')
+    if (!hasAux) {
+      score += 12
+      reasons.push('无辅助时更适合专注死组线性加重')
     }
-    if (aux.length >= 2) score -= 10
     if (duration >= 45 && duration <= 75) score += 6
   }
 
-  if (planId === 'strength-hybrid-mix') {
-    if (highAux >= 2) {
-      score += 28
-      reasons.push('多项辅助可放调节日，保住挪威双硬拉日')
-    } else if (highAux === 1) {
+  if (planId === 'strength-build') {
+    if (duration >= 60) {
+      score += 22
+      reasons.push('单次时长够，四天容量更能练厚')
+    } else if (duration <= 30) {
+      score -= 18
+      reasons.push('时间偏紧，四天容量可能吃不消')
+    }
+    if (tier === 'intermediate') {
       score += 16
-      reasons.push('有辅助项目，挪威高频仍可兼顾')
+      reasons.push('中级适合用四天同步涨力与围度')
+    } else if (tier === 'beginner') {
+      score += 8
+      reasons.push('新手也可用四天打厚基础')
+    }
+    if (body === 'none' && sleep !== 'poor') score += 8
+    if (hasAux) score += 4
+  }
+
+  if (planId === 'strength-hybrid-mix') {
+    if (hasAux) {
+      score += 16
+      reasons.push('有辅助项目，挪威高频仍可兼顾调节日')
     }
     if (duration >= 60) {
       score += 18
@@ -169,6 +225,7 @@ function scorePlan(planId, profile) {
       reasons.push('中高级更吃挪威高频与波浪结构')
     }
     if (tier === 'beginner') score -= 8
+    if (sleep === 'good' || (!sleep && body === 'none')) score += 6
   }
 
   if (!reasons.length) reasons.push('综合你的档案与训练习惯匹配')
@@ -182,7 +239,9 @@ function fitLabelForRank(rank) {
 }
 
 function recommend(profile) {
-  var ranked = CATALOG.map(function (p) {
+  var ranked = CATALOG.filter(function (p) {
+    return isPlanEligible(p.id, profile)
+  }).map(function (p) {
     var scored = scorePlan(p.id, profile)
     return {
       id: p.id,

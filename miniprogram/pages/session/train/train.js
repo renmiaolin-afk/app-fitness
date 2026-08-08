@@ -1,17 +1,22 @@
 const storage = require('../../../utils/storage')
 const { buildTodayView } = require('../../../services/plan')
-const { formatMmSs } = require('../../../utils/format')
+const { formatMmSs, minWorkUnlockSec } = require('../../../utils/format')
+const timerRing = require('../../../utils/timer-ring')
 const copy = require('../../../utils/copy')
 const { applyStrengthAdjustments } = require('../../../services/ready-adjust')
-const { buildMainSetPlan, rowLabel } = require('../../../services/warmup-sets')
+const {
+  buildMainSetPlan,
+  buildAccessorySetPlan,
+  rowLabel
+} = require('../../../services/warmup-sets')
 const { customNavPadTopPx } = require('../../../utils/nav')
+const quality = require('../../../services/session-quality')
+const { scoreCompletedSession } = quality
 
 /** 工作组倒计时：2 分钟；热身组更短 */
 var WORK_SET_SEC = 120
 var WARMUP_SET_SEC = 60
-var RING_IDLE = 'rgba(255,255,255,0.22)'
-var RING_HOT = '#ff2d55'
-var RING_REST = '#ffffff'
+var RING_TICK_MS = timerRing.TICK_MS
 
 Page({
   data: {
@@ -22,22 +27,29 @@ Page({
     totalSets: 3,
     reps: 4,
     kg: 155,
+    kgLabel: '',
     timerText: '2:00',
     restText: '5:00',
     displayTime: '2:00',
     unitHint: '准备开始',
     subText: '',
     targetInfo: '',
+    phaseLabel: '',
     paused: false,
-    pauseText: '暂停',
     timerHot: false,
     showExit: false,
     dots: [],
-    moveSheetShow: false,
+    dotsCompact: false,
+    progressLabel: '',
+    progressPct: 0,
     showCountdown: false,
     countdownNum: 3,
-    ringPct: 0,
-    ringColor: RING_IDLE
+    ringPct: 100,
+    ringColor: 'rgba(255, 45, 85, 0.55)',
+    glowIntensity: 0.55,
+    canComplete: false,
+    completeLabel: '完成本组',
+    unlockLeftSec: 0
   },
 
   timer: null,
@@ -46,26 +58,32 @@ Page({
   setStartedAt: 0,
   workEndsAt: 0,
   workRemainSec: WORK_SET_SEC,
+  workBudgetSec: WORK_SET_SEC,
+  minUnlockSec: 30,
+  activeElapsedBefore: 0,
   restEndsAt: 0,
   restRemainSec: 0,
   restTotalSec: 0,
   session: null,
   completedSets: [],
+  restAddCount: 0,
 
   noop() {},
 
-  openMoveSheet() {
-    if (!this.data.name) return
-    this.setData({ moveSheetShow: true })
-  },
-
-  closeMoveSheet() {
-    this.setData({ moveSheetShow: false })
+  onBackPress() {
+    if (this.data.showExit) {
+      this.closeExit()
+      return true
+    }
+    this.openExit()
+    return true
   },
 
   setWorkBudget(setIndex) {
     var set = this.currentSet(setIndex)
-    return set && set.kind === 'warmup' ? WARMUP_SET_SEC : WORK_SET_SEC
+    if (set && set.kind === 'warmup') return WARMUP_SET_SEC
+    if (set && set.kind === 'accessory') return 90
+    return WORK_SET_SEC
   },
 
   currentSet(setIndex) {
@@ -75,17 +93,40 @@ Page({
   },
 
   setTargetInfo(set) {
-    if (!set) return ''
-    if (set.kind === 'warmup') return '热身 · 本组做 ' + set.reps + ' 次'
+    if (!set) return '按屏幕提示完成这一组'
+    var reps = set.reps != null ? set.reps : ''
+    if (set.kind === 'warmup') {
+      return reps !== '' ? '热身：做 ' + reps + ' 次，活动开就行' : '热身：活动开就行'
+    }
+    if (set.kind === 'accessory') {
+      if (set.bodyweight || !set.kg) {
+        return reps !== '' ? '辅助：自重做 ' + reps + ' 次' : '辅助：按自重完成'
+      }
+      return reps !== '' ? '辅助：做 ' + reps + ' 次' : '辅助：完成本组'
+    }
     var label = rowLabel(set)
-    if (label && label !== '工作') return label + ' · 本组做 ' + set.reps + ' 次'
-    return '本组做 ' + set.reps + ' 次'
+    if (label && label !== '工作' && label !== '正式') {
+      return label + '：做 ' + reps + ' 次'
+    }
+    return reps !== '' ? '这一组做 ' + reps + ' 次' : '完成本组次数'
+  },
+
+  phaseLabelForSet(set) {
+    if (!set) return '训练'
+    if (set.kind === 'warmup') return '热身'
+    if (set.kind === 'accessory') return '辅助动作'
+    return '力量练习'
+  },
+
+  displayNameForSet(set) {
+    if (set && set.kind === 'accessory' && set.moveName) return set.moveName
+    return (this.session && this.session.name) || this.data.name || ''
   },
 
   buildSubText(setIndex, totalSets, paused) {
     var plan = (this.session && this.session.setPlan) || []
     var set = plan[setIndex]
-    var text
+    var text = '第 ' + (setIndex + 1) + ' / ' + totalSets + ' 组'
     if (set && set.kind === 'warmup') {
       var wi = 0
       var wt = 0
@@ -95,17 +136,17 @@ Page({
           if (i <= setIndex) wi++
         }
       }
-      text = '热身 ' + wi + '/' + wt
-    } else if (set && set.block && set.block !== 'work') {
-      var bi = 0
-      var bt = 0
-      for (var j = 0; j < plan.length; j++) {
-        if (plan[j].block === set.block) {
-          bt++
-          if (j <= setIndex) bi++
+      text = '热身第 ' + wi + ' / ' + wt + ' 组'
+    } else if (set && set.kind === 'accessory') {
+      var ai = 0
+      var at = 0
+      for (var a = 0; a < plan.length; a++) {
+        if (plan[a].kind === 'accessory' && plan[a].block === set.block) {
+          at++
+          if (a <= setIndex) ai++
         }
       }
-      text = rowLabel(set) + ' ' + bi + '/' + bt + ' · 共 ' + totalSets + ' 组'
+      text = '辅助第 ' + ai + ' / ' + at + ' 组'
     } else if (set && set.kind === 'work') {
       var wki = 0
       var wkt = 0
@@ -115,30 +156,26 @@ Page({
           if (k <= setIndex) wki++
         }
       }
-      text = '工作 ' + wki + '/' + wkt + ' · 共 ' + totalSets + ' 组'
-    } else {
-      text = '第 ' + (setIndex + 1) + ' 组 · 共 ' + totalSets + ' 组'
+      text = '正式第 ' + wki + ' / ' + wkt + ' 组'
     }
     if (paused) text += ' · 已暂停'
     return text
   },
 
-  ringState(phase, leftSec, paused, budgetSec) {
-    var pct = 0
-    var color = RING_IDLE
-    var budget = budgetSec || WORK_SET_SEC
+  ringVisual(phase, paused) {
     if (phase === 'working') {
-      pct = Math.max(0, Math.min(100, Math.round(((leftSec || 0) / budget) * 100)))
-      color = RING_HOT
-    } else if (phase === 'rest') {
-      var total = this.restTotalSec || 1
-      pct = Math.max(0, Math.min(100, Math.round(((leftSec || 0) / total) * 100)))
-      color = RING_REST
-    } else if (phase === 'ready') {
-      pct = 100
-      color = RING_IDLE
+      var budgetMs = Math.max(1, (this.workBudgetSec || this.setWorkBudget(this.data.setIndex)) * 1000)
+      var leftMs = paused
+        ? Math.max(0, (this.workRemainSec || 0) * 1000)
+        : Math.max(0, this.workEndsAt - Date.now())
+      return timerRing.countdownRing(leftMs, budgetMs, !!paused)
     }
-    return { ringPct: pct, ringColor: color, timerHot: phase === 'working' && !paused }
+    if (phase === 'rest') {
+      var totalMs = Math.max(1, (this.restTotalSec || 1) * 1000)
+      var restLeftMs = Math.max(0, this.restEndsAt - Date.now())
+      return timerRing.countdownRing(restLeftMs, totalMs, false)
+    }
+    return timerRing.idleRing()
   },
 
   apply(patch) {
@@ -148,26 +185,39 @@ Page({
     const budget = this.setWorkBudget(next.setIndex)
     let displayTime = next.timerText
     let unitHint = '准备开始'
-    let leftSec = 0
     if (phase === 'rest') {
       displayTime = next.restText
-      unitHint = '组间休息'
-      leftSec = this.restRemainSec
+      unitHint = '休息一下'
     } else if (phase === 'working') {
       displayTime = next.timerText
       unitHint = paused ? '已暂停' : '本组剩余'
-      leftSec = this.workRemainSec
     } else {
-      unitHint = '待开始'
+      unitHint = '准备好再开始'
       displayTime = next.timerText || formatMmSs(budget)
-      leftSec = budget
     }
-    var ring = this.ringState(phase, leftSec, paused, budget)
-    patch = Object.assign({}, patch || {}, ring, {
+    var ring = this.ringVisual(phase, paused)
+    var curSet = this.currentSet(next.setIndex)
+    var name = next.name
+    if (curSet) {
+      name = copy.moveName(this.displayNameForSet(curSet))
+    }
+    var kgPatch = {}
+    if (curSet && patch && (patch.setIndex != null || patch.kg != null || patch.phase)) {
+      if (curSet.bodyweight || (curSet.kind === 'accessory' && !curSet.kg)) {
+        kgPatch.kg = 0
+        kgPatch.kgLabel = '自重'
+      } else {
+        kgPatch.kgLabel = ''
+      }
+    }
+    var progress = this.progressMeta(next.setIndex, (this.session && this.session.setPlan) || [])
+    patch = Object.assign({}, patch || {}, ring, kgPatch, progress, {
+      name: name,
+      phaseLabel: this.phaseLabelForSet(curSet),
       displayTime: displayTime,
       unitHint: unitHint,
-      subText: this.buildSubText(next.setIndex, next.totalSets, paused),
-      pauseText: paused ? '继续' : '暂停'
+      targetInfo: this.setTargetInfo(curSet),
+      subText: this.buildSubText(next.setIndex, next.totalSets, paused)
     })
     this.setData(patch)
   },
@@ -185,6 +235,27 @@ Page({
         return
       }
       this.restore(draft)
+      return
+    }
+    const profile0 = storage.getProfile()
+    const view0 = buildTodayView(profile0)
+    const dayLog0 = quality.findDayLog(
+      storage.getLogs(),
+      quality.todayKey(),
+      view0.slot && view0.slot.weekday
+    )
+    if (quality.isCompletedLog(dayLog0)) {
+      wx.showToast({ title: '今天已练完', icon: 'none' })
+      setTimeout(function () {
+        wx.navigateBack()
+      }, 400)
+      return
+    }
+    if (dayLog0 && dayLog0.kind === 'leave') {
+      wx.showToast({ title: '今天已请假', icon: 'none' })
+      setTimeout(function () {
+        wx.navigateBack()
+      }, 400)
       return
     }
     const payload = wx.getStorageSync('af_ready_payload') || null
@@ -207,7 +278,8 @@ Page({
     const adj = (payload && payload.adjustments) || {}
     const applied = applyStrengthAdjustments(detail, adj)
     const main = applied.main
-    const setPlan = buildMainSetPlan(main)
+    const accessories = applied.accessories || []
+    const setPlan = buildMainSetPlan(main).concat(buildAccessorySetPlan(accessories))
     const totalSets = setPlan.length || main.sets || 3
     const first = setPlan[0] || {
       kind: 'work',
@@ -217,7 +289,7 @@ Page({
     }
     this.session = {
       kind: 'strength',
-      date: (payload && payload.date) || new Date().toISOString().slice(0, 10),
+      date: (payload && payload.date) || quality.todayKey(),
       weekday: view.slot.weekday,
       name: main.name,
       totalSets: totalSets,
@@ -226,17 +298,20 @@ Page({
       workReps: main.reps,
       restSec: main.restSec || 180,
       adjustments: applied.adjustments,
-      accessories: applied.accessories || [],
-      startedAt: Date.now()
+      accessories: accessories,
+      startedAt: Date.now(),
+      restAddCount: 0
     }
     this.completedSets = []
+    this.restAddCount = 0
     this.apply({
       phase: 'ready',
-      name: copy.moveName(main.name),
+      name: copy.moveName(this.displayNameForSet(first)),
       setIndex: 0,
       totalSets: totalSets,
       reps: first.reps,
-      kg: first.kg,
+      kg: first.bodyweight ? 0 : first.kg,
+      kgLabel: first.bodyweight ? '自重' : '',
       timerText: formatMmSs(this.setWorkBudget(0)),
       targetInfo: this.setTargetInfo(first),
       dots: this.makeDots(0, setPlan),
@@ -255,10 +330,12 @@ Page({
         sets: draft.workSets || draft.totalSets,
         reps: draft.workReps || draft.reps,
         restSec: draft.restSec
-      })
+      }).concat(buildAccessorySetPlan(draft.accessories || []))
       this.session.totalSets = this.session.setPlan.length
     }
     this.completedSets = draft.completedSets || []
+    this.restAddCount = Number(draft.restAddCount) || 0
+    this.session.restAddCount = this.restAddCount
     const setIndex = draft.setIndex || 0
     const cur = this.currentSet(setIndex) || {
       kg: draft.kg,
@@ -268,11 +345,12 @@ Page({
     const budget = this.setWorkBudget(setIndex)
     this.apply({
       phase: draft.phase || 'ready',
-      name: draft.name,
+      name: copy.moveName(this.displayNameForSet(cur)),
       setIndex: setIndex,
       totalSets: this.session.totalSets,
       reps: cur.reps,
-      kg: cur.kg,
+      kg: cur.bodyweight ? 0 : cur.kg,
+      kgLabel: cur.bodyweight ? '自重' : '',
       timerText: formatMmSs(budget),
       targetInfo: this.setTargetInfo(cur),
       dots: this.makeDots(setIndex, this.session.setPlan),
@@ -300,6 +378,19 @@ Page({
     return arr
   },
 
+  progressMeta(active, plan) {
+    var list = plan || (this.session && this.session.setPlan) || []
+    var total = list.length || Number(this.data.totalSets) || 0
+    var cur = Math.min(total, (Number(active) || 0) + 1)
+    var compact = total > 8
+    var pct = total > 0 ? Math.round((cur / total) * 100) : 0
+    return {
+      dotsCompact: compact,
+      progressLabel: total > 0 ? cur + ' / ' + total : '',
+      progressPct: pct
+    }
+  },
+
   persistDraft(summary) {
     if (!this.session) return
     storage.setDraft({
@@ -316,10 +407,12 @@ Page({
       adjustments: this.session.adjustments,
       accessories: this.session.accessories,
       startedAt: this.session.startedAt,
+      updatedAt: Date.now(),
       kg: this.data.kg,
       setIndex: this.data.setIndex,
       phase: this.data.phase,
       completedSets: this.completedSets,
+      restAddCount: this.restAddCount || 0,
       restRemainSec: this.restRemainSec,
       workRemainSec: this.workRemainSec,
       summary:
@@ -382,67 +475,126 @@ Page({
     }, 1000)
   },
 
-  beginWorking(remainSec) {
+  completeGatePatch(elapsedSec) {
+    var need = this.minUnlockSec || 30
+    var left = Math.max(0, need - Math.floor(Number(elapsedSec) || 0))
+    var can = left <= 0
+    return {
+      canComplete: can,
+      unlockLeftSec: left,
+      completeLabel: can ? '完成本组' : '完成本组 ' + left + 's'
+    }
+  },
+
+  workElapsedSec() {
+    var budget = this.workBudgetSec || this.setWorkBudget(this.data.setIndex)
+    if (this.data.paused) {
+      return Math.max(0, budget - (this.workRemainSec || 0))
+    }
+    var left = Math.max(0, Math.ceil((this.workEndsAt - Date.now()) / 1000))
+    return Math.max(0, budget - left)
+  },
+
+  startWorkTicker() {
     var that = this
+    if (this.timer) clearInterval(this.timer)
+    this._lastPaintSec = null
+    this.timer = setInterval(function () {
+      that.paintWorkTick()
+    }, RING_TICK_MS)
+    this.paintWorkTick()
+  },
+
+  paintWorkTick() {
+    if (this.data.phase !== 'working' || this.data.paused) return
+    var leftMs = Math.max(0, this.workEndsAt - Date.now())
+    var sec = Math.max(0, Math.ceil(leftMs / 1000))
+    this.workRemainSec = sec
+    var budgetMs = Math.max(1, (this.workBudgetSec || WORK_SET_SEC) * 1000)
+    var ring = timerRing.countdownRing(leftMs, budgetMs, false)
+    var gate = this.completeGatePatch(this.workElapsedSec())
+    var patch = Object.assign({}, ring, gate)
+    if (sec !== this._lastPaintSec) {
+      this._lastPaintSec = sec
+      patch.timerText = formatMmSs(sec)
+      patch.displayTime = formatMmSs(sec)
+      patch.unitHint = '本组剩余'
+    }
+    this.setData(patch)
+    if (leftMs <= 0) {
+      this.clearTimers()
+      this.vibrateTick()
+      this.apply(
+        Object.assign(
+          { timerText: '0:00', paused: false },
+          this.completeGatePatch(this.workBudgetSec)
+        )
+      )
+      this.persistDraft('本组时间到')
+    }
+  },
+
+  beginWorking(remainSec) {
     this.clearTimers()
     var budget = this.setWorkBudget(this.data.setIndex)
     var left = remainSec != null ? remainSec : budget
     if (left < 0) left = 0
     if (left > budget) left = budget
+    this.workBudgetSec = budget
+    this.minUnlockSec = minWorkUnlockSec(budget)
     this.workRemainSec = left
     this.workEndsAt = Date.now() + left * 1000
     this.setStartedAt = Date.now() - (budget - left) * 1000
-    this.apply({
-      phase: 'working',
-      paused: false,
-      timerText: formatMmSs(left),
-      showCountdown: false
-    })
+    this.activeElapsedBefore = budget - left
+    var gate = this.completeGatePatch(this.activeElapsedBefore)
+    this.apply(
+      Object.assign(
+        {
+          phase: 'working',
+          paused: false,
+          timerText: formatMmSs(left),
+          showCountdown: false
+        },
+        gate
+      )
+    )
     this.persistDraft('本组倒计时中')
-    this.timer = setInterval(function () {
-      if (that.data.paused) return
-      var sec = Math.max(0, Math.ceil((that.workEndsAt - Date.now()) / 1000))
-      that.workRemainSec = sec
-      that.apply({ timerText: formatMmSs(sec) })
-      if (sec <= 0) {
-        that.clearTimers()
-        that.vibrateTick()
-        that.apply({ timerText: '0:00', paused: false })
-        that.persistDraft('本组时间到')
-      }
-    }, 200)
+    this.startWorkTicker()
   },
 
   togglePause() {
     if (this.data.phase !== 'working') return
     if (!this.data.paused) {
-      this.workRemainSec = Math.max(0, Math.ceil((this.workEndsAt - Date.now()) / 1000))
-      this.apply({ paused: true, timerText: formatMmSs(this.workRemainSec) })
+      var leftMs = Math.max(0, this.workEndsAt - Date.now())
+      this.workRemainSec = Math.max(0, Math.ceil(leftMs / 1000))
+      this.activeElapsedBefore = this.workElapsedSec()
+      this.apply(
+        Object.assign(
+          { paused: true, timerText: formatMmSs(this.workRemainSec) },
+          this.completeGatePatch(this.activeElapsedBefore)
+        )
+      )
       this.persistDraft('已暂停')
     } else {
       this.workEndsAt = Date.now() + this.workRemainSec * 1000
       this.apply({ paused: false })
       this.persistDraft('本组倒计时中')
-      if (this.workRemainSec <= 0) return
-      var that = this
-      if (!this.timer) {
-        this.timer = setInterval(function () {
-          if (that.data.paused) return
-          var sec = Math.max(0, Math.ceil((that.workEndsAt - Date.now()) / 1000))
-          that.workRemainSec = sec
-          that.apply({ timerText: formatMmSs(sec) })
-          if (sec <= 0) {
-            that.clearTimers()
-            that.vibrateTick()
-            that.apply({ timerText: '0:00' })
-            that.persistDraft('本组时间到')
-          }
-        }, 200)
+      if (this.workRemainSec <= 0) {
+        this.apply(this.completeGatePatch(this.workBudgetSec))
+        return
       }
+      this.startWorkTicker()
     }
   },
 
   endSet() {
+    if (!this.data.canComplete) {
+      wx.showToast({
+        title: '再练 ' + (this.data.unlockLeftSec || 0) + ' 秒',
+        icon: 'none'
+      })
+      return
+    }
     this.clearTimers()
     const cur = this.currentSet(this.data.setIndex) || {
       kind: 'work',
@@ -457,6 +609,7 @@ Page({
       kind: cur.kind || 'work',
       block: cur.block || '',
       label: rowLabel(cur),
+      moveName: this.displayNameForSet(cur),
       kg: this.data.kg,
       reps: this.data.reps,
       durationSec: durationSec
@@ -466,32 +619,50 @@ Page({
       this.finishSession()
       return
     }
-    const nextSet = this.currentSet(next)
+    const nextSet = this.currentSet(next) || {}
     this.apply({
       setIndex: next,
       phase: 'rest',
-      kg: nextSet.kg,
+      kg: nextSet.bodyweight ? 0 : nextSet.kg,
+      kgLabel: nextSet.bodyweight ? '自重' : '',
       reps: nextSet.reps,
       dots: this.makeDots(next, this.session.setPlan),
       targetInfo: this.setTargetInfo(nextSet)
     })
-    this.startRest(cur.restSec || this.session.restSec)
+    this.startRest(cur.restSec || nextSet.restSec || this.session.restSec)
   },
 
   startRest(sec) {
-    const that = this
+    var that = this
     this.clearTimers()
     this.restTotalSec = sec
     this.restRemainSec = sec
     this.restEndsAt = Date.now() + sec * 1000
+    this._lastRestPaintSec = null
     this.apply({ restText: formatMmSs(sec), phase: 'rest' })
     this.persistDraft('组间休息 ' + formatMmSs(sec))
     this.restTimer = setInterval(function () {
-      const left = Math.max(0, Math.ceil((that.restEndsAt - Date.now()) / 1000))
-      that.restRemainSec = left
-      that.apply({ restText: formatMmSs(left) })
-      if (left <= 0) that.clearTimers()
-    }, 200)
+      that.paintRestTick()
+    }, RING_TICK_MS)
+    this.paintRestTick()
+  },
+
+  paintRestTick() {
+    if (this.data.phase !== 'rest') return
+    var leftMs = Math.max(0, this.restEndsAt - Date.now())
+    var sec = Math.max(0, Math.ceil(leftMs / 1000))
+    this.restRemainSec = sec
+    var totalMs = Math.max(1, (this.restTotalSec || 1) * 1000)
+    var ring = timerRing.countdownRing(leftMs, totalMs, false)
+    var patch = Object.assign({}, ring)
+    if (sec !== this._lastRestPaintSec) {
+      this._lastRestPaintSec = sec
+      patch.restText = formatMmSs(sec)
+      patch.displayTime = formatMmSs(sec)
+      patch.unitHint = '休息一下'
+    }
+    this.setData(patch)
+    if (leftMs <= 0) this.clearTimers()
   },
 
   addRest() {
@@ -499,12 +670,19 @@ Page({
     this.restEndsAt += 20000
     this.restRemainSec += 20
     this.restTotalSec += 20
-    this.apply({ restText: formatMmSs(this.restRemainSec) })
+    this.restAddCount = (this.restAddCount || 0) + 1
+    if (this.session) this.session.restAddCount = this.restAddCount
+    this._lastRestPaintSec = null
+    this.paintRestTick()
     this.persistDraft()
   },
 
   finishSession() {
     this.clearTimers()
+    const grade = scoreCompletedSession({
+      kind: 'strength',
+      restAddCount: this.restAddCount || 0
+    })
     const log = {
       date: this.session.date,
       weekday: this.session.weekday,
@@ -512,8 +690,18 @@ Page({
       name: this.session.name,
       sets: this.completedSets,
       accessories: this.session.accessories,
-      durationMin: Math.round((Date.now() - this.session.startedAt) / 60000),
-      score: 90,
+      startedAt: this.session.startedAt,
+      durationSec: Math.max(
+        0,
+        Math.round((Date.now() - (this.session.startedAt || Date.now())) / 1000)
+      ),
+      durationMin: Math.max(
+        0,
+        Math.round((Date.now() - (this.session.startedAt || Date.now())) / 60000)
+      ),
+      restAddCount: this.restAddCount || 0,
+      score: grade.score,
+      title: grade.title,
       finishedAt: Date.now()
     }
     storage.appendLog(log)

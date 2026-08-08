@@ -1,9 +1,9 @@
 /**
  * 计划个性化推荐（本地兜底与云函数同规则）。
- * 三套独立力量举：挪威 / 线性5×5 / 5/3/1
+ * 四套：挪威高频 / 线性5×5 / 5/3/1 / 四天力量
  */
 
-const { PLAN_OPTIONS, getWeekSlots } = require('./plan')
+const { PLAN_OPTIONS, getWeekSlots, inferStrengthTier } = require('./plan')
 const { estimateBlockGain } = require('./progress-target')
 
 const CATALOG = PLAN_OPTIONS.map(function (p) {
@@ -16,19 +16,78 @@ const CATALOG = PLAN_OPTIONS.map(function (p) {
   }
 })
 
+/** 进阶不再展示「新手线性」——相对力量已高时 5×5 红利基本吃完 */
+function isPlanEligible(planId, profile) {
+  var tier =
+    (profile && profile.strengthTier) || inferStrengthTier(profile || {})
+  if (planId === 'strength-linear' && tier === 'advanced') return false
+  return true
+}
+
 function scorePlan(planId, profile) {
   var score = 40
   var reasons = []
   var habits = (profile && profile.habits) || {}
   var duration = Number(habits.durationMin) || 60
   var aux = (profile && profile.auxiliaries) || []
-  var tier = (profile && profile.strengthTier) || 'intermediate'
+  var tier =
+    (profile && profile.strengthTier) || inferStrengthTier(profile || {}) || 'intermediate'
   var sleep = habits.sleep || 'ok'
   var body = habits.body || 'none'
+  var effort = habits.effort || 'solid'
   var age = Number(profile && profile.ageYears) || 28
-  var highAux = 0
-  for (var i = 0; i < aux.length; i++) {
-    if (aux[i] === 'crossfit' || aux[i] === 'hyrox' || aux[i] === 'running') highAux++
+  var hasAux = aux.length >= 1
+
+  // —— 训练节奏（建档第 2 页）：轻松 / 好好练 / 拼一把 ——
+  if (effort === 'easy') {
+    if (planId === 'strength-time-efficient') {
+      score += 36
+      reasons.push('你想轻松练练，省时顶组最不容易练崩')
+    }
+    if (planId === 'strength-linear') {
+      score += 18
+      reasons.push('线性结构简单，适合轻松把习惯养住')
+    }
+    if (planId === 'strength-build') {
+      score -= 22
+      reasons.push('四天容量偏满，和「轻松练练」不太匹配')
+    }
+    if (planId === 'strength-hybrid-mix') {
+      score -= 28
+      reasons.push('挪威高频负担偏大，轻松阶段先不优先')
+    }
+  } else if (effort === 'hard') {
+    if (planId === 'strength-hybrid-mix') {
+      score += 32
+      reasons.push('你想拼一把，挪威高频更能吃满涨力窗口')
+    }
+    if (planId === 'strength-build') {
+      score += 26
+      reasons.push('四天容量足，适合想认真堆进度的阶段')
+    }
+    if (planId === 'strength-time-efficient') {
+      score -= 14
+      reasons.push('省时顶组偏保守，不如高频/四天吃得满')
+    }
+    if (planId === 'strength-linear' && tier !== 'beginner') {
+      score -= 6
+    }
+  } else {
+    // solid：好好练 — 平衡进步与可持续
+    if (planId === 'strength-linear') {
+      score += 14
+      reasons.push('好好练时，线性加重清晰好执行')
+    }
+    if (planId === 'strength-build') {
+      score += 12
+      reasons.push('好好练也能用四天把力量和围度一起推')
+    }
+    if (planId === 'strength-hybrid-mix') {
+      score += 8
+    }
+    if (planId === 'strength-time-efficient') {
+      score += 6
+    }
   }
 
   // 5/3/1：省时、恢复一般、年龄偏大
@@ -50,10 +109,9 @@ function scorePlan(planId, profile) {
       score += 12
       reasons.push('年龄偏大，顶组周期更易长期坚持')
     }
-    if (aux.length >= 2) score -= 4
   }
 
-  // 线性 5×5：新手/早中级、辅助少
+  // 线性 5×5：新手/早中级
   if (planId === 'strength-linear') {
     if (tier === 'beginner') {
       score += 36
@@ -65,22 +123,38 @@ function scorePlan(planId, profile) {
       score -= 12
       reasons.push('相对力量已高，纯线性空间有限')
     }
-    if (aux.length <= 1) {
-      score += 20
-      reasons.push('辅助较少，适合死组线性加重')
+    if (!hasAux) {
+      score += 12
+      reasons.push('无辅助时更适合专注死组线性加重')
     }
-    if (aux.length >= 2) score -= 10
     if (duration >= 45 && duration <= 75) score += 6
   }
 
-  // 挪威：恢复好、时长够、辅助多也能挂调节日
-  if (planId === 'strength-hybrid-mix') {
-    if (highAux >= 2) {
-      score += 28
-      reasons.push('多项辅助可放调节日，保住挪威双硬拉日')
-    } else if (highAux === 1) {
+  // 四天力量：想练厚、时长够、中级
+  if (planId === 'strength-build') {
+    if (duration >= 60) {
+      score += 22
+      reasons.push('单次时长够，四天容量更能练厚')
+    } else if (duration <= 30) {
+      score -= 18
+      reasons.push('时间偏紧，四天容量可能吃不消')
+    }
+    if (tier === 'intermediate') {
       score += 16
-      reasons.push('有辅助项目，挪威高频仍可兼顾')
+      reasons.push('中级适合用四天同步涨力与围度')
+    } else if (tier === 'beginner') {
+      score += 8
+      reasons.push('新手也可用四天打厚基础')
+    }
+    if (body === 'none' && sleep !== 'poor') score += 8
+    if (hasAux) score += 4
+  }
+
+  // 挪威：恢复好、时长够、有辅助也能挂调节日
+  if (planId === 'strength-hybrid-mix') {
+    if (hasAux) {
+      score += 16
+      reasons.push('有辅助项目，挪威高频仍可兼顾调节日')
     }
     if (duration >= 60) {
       score += 18
@@ -116,7 +190,9 @@ function fitLabelForRank(rank) {
  */
 function recommendPlansLocal(profile) {
   var aux = (profile && profile.auxiliaries) || []
-  var ranked = CATALOG.map(function (p) {
+  var ranked = CATALOG.filter(function (p) {
+    return isPlanEligible(p.id, profile)
+  }).map(function (p) {
     var scored = scorePlan(p.id, profile)
     var gain = estimateBlockGain(Object.assign({}, profile, { planId: p.id }))
     var slots = getWeekSlots(p.id, aux)

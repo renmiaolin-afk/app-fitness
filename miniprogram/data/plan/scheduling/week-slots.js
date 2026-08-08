@@ -1,20 +1,20 @@
 module.exports = {
-  "version": 3,
-  "description": "辅助组合 → 七天槽位。三套力量举均含每周肩推专项日（兼带背部辅项）。",
+  "version": 4,
+  "description": "辅助组合 → 七天槽位。辅助仅单选（CF / Hyrox / AthX）。四套力量举均含每周肩背专项日。",
   "keyRule": "将用户所选 aux id 按字母序排序后用 + 拼接；空选为 none",
   "basePlan": "strength-hybrid-mix",
   "dayTypes": {
     "strength": "力量主课",
-    "aux_high": "高强度辅助（CF / Hyrox）",
-    "aux_zone2": "轻松有氧辅助（跑步 Zone2）",
+    "aux_high": "高强度辅助（CF / Hyrox / AthX）",
+    "aux_zone2": "轻松有氧辅助（已弃用）",
     "aux_low": "低强度技术/恢复（双硬辅冲突时降级用）",
     "rest": "休息"
   },
   "plans": {
     "strength-hybrid-mix": {
-      "name": "挪威力训计划",
-      "badge": "高频",
-      "meta": "12周 · 4×4/2×2/1×8 + 每周肩推专项；硬拉重/轻双日",
+      "name": "挪威高频",
+      "badge": "涨力快",
+      "meta": "每周蹲推拉更密 + 肩背；恢复好时三大项涨得最快",
       "combinations": {
         "none": [
           {
@@ -45,7 +45,7 @@ module.exports = {
             "weekday": 5,
             "type": "strength",
             "key": "ohp",
-            "label": "肩推"
+            "label": "肩背"
           },
           {
             "weekday": 6,
@@ -89,7 +89,7 @@ module.exports = {
             "weekday": 5,
             "type": "strength",
             "key": "ohp",
-            "label": "肩推"
+            "label": "肩背"
           },
           {
             "weekday": 6,
@@ -134,7 +134,7 @@ module.exports = {
             "weekday": 5,
             "type": "strength",
             "key": "ohp",
-            "label": "肩推"
+            "label": "肩背"
           },
           {
             "weekday": 6,
@@ -150,7 +150,7 @@ module.exports = {
             "label": "休"
           }
         ],
-        "running": [
+        "athx": [
           {
             "weekday": 1,
             "type": "strength",
@@ -171,161 +171,22 @@ module.exports = {
           },
           {
             "weekday": 4,
-            "type": "aux_zone2",
-            "key": "running",
-            "label": "跑",
-            "session": "sessions/aux/running-zone2.json"
-          },
-          {
-            "weekday": 5,
-            "type": "strength",
-            "key": "ohp",
-            "label": "肩推"
-          },
-          {
-            "weekday": 6,
-            "type": "strength",
-            "key": "deadlift_light",
-            "label": "轻拉"
-          },
-          {
-            "weekday": 7,
             "type": "rest",
             "key": "rest",
             "label": "休"
-          }
-        ],
-        "crossfit+running": [
-          {
-            "weekday": 1,
-            "type": "strength",
-            "key": "squat",
-            "label": "深蹲"
-          },
-          {
-            "weekday": 2,
-            "type": "strength",
-            "key": "bench",
-            "label": "卧推"
-          },
-          {
-            "weekday": 3,
-            "type": "strength",
-            "key": "deadlift",
-            "label": "硬拉"
-          },
-          {
-            "weekday": 4,
-            "type": "aux_zone2",
-            "key": "running",
-            "label": "跑",
-            "session": "sessions/aux/running-zone2.json"
           },
           {
             "weekday": 5,
             "type": "strength",
             "key": "ohp",
-            "label": "肩推"
+            "label": "肩背"
           },
           {
             "weekday": 6,
             "type": "aux_high",
-            "key": "crossfit",
-            "label": "CF",
-            "session": "sessions/aux/crossfit-short-metcon.json"
-          },
-          {
-            "weekday": 7,
-            "type": "rest",
-            "key": "rest",
-            "label": "休"
-          }
-        ],
-        "hyrox+running": [
-          {
-            "weekday": 1,
-            "type": "strength",
-            "key": "squat",
-            "label": "深蹲"
-          },
-          {
-            "weekday": 2,
-            "type": "strength",
-            "key": "bench",
-            "label": "卧推"
-          },
-          {
-            "weekday": 3,
-            "type": "strength",
-            "key": "deadlift",
-            "label": "硬拉"
-          },
-          {
-            "weekday": 4,
-            "type": "aux_zone2",
-            "key": "running",
-            "label": "跑",
-            "session": "sessions/aux/running-zone2.json"
-          },
-          {
-            "weekday": 5,
-            "type": "strength",
-            "key": "ohp",
-            "label": "肩推"
-          },
-          {
-            "weekday": 6,
-            "type": "aux_high",
-            "key": "hyrox",
-            "label": "Hyrox",
-            "session": "sessions/aux/hyrox-stations.json"
-          },
-          {
-            "weekday": 7,
-            "type": "rest",
-            "key": "rest",
-            "label": "休"
-          }
-        ],
-        "crossfit+hyrox": [
-          {
-            "weekday": 1,
-            "type": "strength",
-            "key": "squat",
-            "label": "深蹲"
-          },
-          {
-            "weekday": 2,
-            "type": "strength",
-            "key": "bench",
-            "label": "卧推"
-          },
-          {
-            "weekday": 3,
-            "type": "strength",
-            "key": "deadlift",
-            "label": "硬拉"
-          },
-          {
-            "weekday": 4,
-            "type": "aux_low",
-            "key": "hyrox",
-            "label": "Hyrox轻",
-            "session": "sessions/aux/hyrox-stations.json",
-            "intensity": "technique"
-          },
-          {
-            "weekday": 5,
-            "type": "strength",
-            "key": "ohp",
-            "label": "肩推"
-          },
-          {
-            "weekday": 6,
-            "type": "aux_high",
-            "key": "crossfit",
-            "label": "CF",
-            "session": "sessions/aux/crossfit-short-metcon.json"
+            "key": "athx",
+            "label": "AthX",
+            "session": "sessions/aux/athx-hybrid.json"
           },
           {
             "weekday": 7,
@@ -337,9 +198,9 @@ module.exports = {
       }
     },
     "strength-linear": {
-      "name": "线性 5×5 计划",
-      "badge": "稳加重",
-      "meta": "12周 · 蹲卧5×5、硬拉1×5 + 每周肩推专项",
+      "name": "线性加重",
+      "badge": "打基础",
+      "meta": "蹲卧 5×5、硬拉 1×5 + 肩背；结构简单，适合连续进步",
       "combinations": {
         "none": [
           {
@@ -370,58 +231,13 @@ module.exports = {
             "weekday": 5,
             "type": "strength",
             "key": "ohp",
-            "label": "肩推"
+            "label": "肩背"
           },
           {
             "weekday": 6,
             "type": "rest",
             "key": "rest",
             "label": "休"
-          },
-          {
-            "weekday": 7,
-            "type": "rest",
-            "key": "rest",
-            "label": "休"
-          }
-        ],
-        "running": [
-          {
-            "weekday": 1,
-            "type": "strength",
-            "key": "squat",
-            "label": "深蹲"
-          },
-          {
-            "weekday": 2,
-            "type": "strength",
-            "key": "bench",
-            "label": "卧推"
-          },
-          {
-            "weekday": 3,
-            "type": "strength",
-            "key": "deadlift",
-            "label": "硬拉"
-          },
-          {
-            "weekday": 4,
-            "type": "rest",
-            "key": "rest",
-            "label": "休"
-          },
-          {
-            "weekday": 5,
-            "type": "strength",
-            "key": "ohp",
-            "label": "肩推"
-          },
-          {
-            "weekday": 6,
-            "type": "aux_zone2",
-            "key": "running",
-            "label": "跑",
-            "session": "sessions/aux/running-zone2.json"
           },
           {
             "weekday": 7,
@@ -459,7 +275,7 @@ module.exports = {
             "weekday": 5,
             "type": "strength",
             "key": "ohp",
-            "label": "肩推"
+            "label": "肩背"
           },
           {
             "weekday": 6,
@@ -504,7 +320,7 @@ module.exports = {
             "weekday": 5,
             "type": "strength",
             "key": "ohp",
-            "label": "肩推"
+            "label": "肩背"
           },
           {
             "weekday": 6,
@@ -521,7 +337,7 @@ module.exports = {
             "label": "休"
           }
         ],
-        "crossfit+running": [
+        "athx": [
           {
             "weekday": 1,
             "type": "strength",
@@ -542,116 +358,22 @@ module.exports = {
           },
           {
             "weekday": 4,
+            "type": "rest",
+            "key": "rest",
+            "label": "休"
+          },
+          {
+            "weekday": 5,
+            "type": "strength",
+            "key": "ohp",
+            "label": "肩背"
+          },
+          {
+            "weekday": 6,
             "type": "aux_high",
-            "key": "crossfit",
-            "label": "CF",
-            "session": "sessions/aux/crossfit-short-metcon.json"
-          },
-          {
-            "weekday": 5,
-            "type": "strength",
-            "key": "ohp",
-            "label": "肩推"
-          },
-          {
-            "weekday": 6,
-            "type": "aux_zone2",
-            "key": "running",
-            "label": "跑",
-            "session": "sessions/aux/running-zone2.json"
-          },
-          {
-            "weekday": 7,
-            "type": "rest",
-            "key": "rest",
-            "label": "休"
-          }
-        ],
-        "hyrox+running": [
-          {
-            "weekday": 1,
-            "type": "strength",
-            "key": "squat",
-            "label": "深蹲"
-          },
-          {
-            "weekday": 2,
-            "type": "strength",
-            "key": "bench",
-            "label": "卧推"
-          },
-          {
-            "weekday": 3,
-            "type": "strength",
-            "key": "deadlift",
-            "label": "硬拉"
-          },
-          {
-            "weekday": 4,
-            "type": "aux_low",
-            "key": "hyrox",
-            "label": "Hyrox轻",
-            "session": "sessions/aux/hyrox-stations.json",
-            "intensity": "technique"
-          },
-          {
-            "weekday": 5,
-            "type": "strength",
-            "key": "ohp",
-            "label": "肩推"
-          },
-          {
-            "weekday": 6,
-            "type": "aux_zone2",
-            "key": "running",
-            "label": "跑",
-            "session": "sessions/aux/running-zone2.json"
-          },
-          {
-            "weekday": 7,
-            "type": "rest",
-            "key": "rest",
-            "label": "休"
-          }
-        ],
-        "crossfit+hyrox": [
-          {
-            "weekday": 1,
-            "type": "strength",
-            "key": "squat",
-            "label": "深蹲"
-          },
-          {
-            "weekday": 2,
-            "type": "strength",
-            "key": "bench",
-            "label": "卧推"
-          },
-          {
-            "weekday": 3,
-            "type": "strength",
-            "key": "deadlift",
-            "label": "硬拉"
-          },
-          {
-            "weekday": 4,
-            "type": "aux_high",
-            "key": "crossfit",
-            "label": "CF",
-            "session": "sessions/aux/crossfit-short-metcon.json",
-            "note": "双硬辅只保留短 CF；Hyrox 暂缓"
-          },
-          {
-            "weekday": 5,
-            "type": "strength",
-            "key": "ohp",
-            "label": "肩推"
-          },
-          {
-            "weekday": 6,
-            "type": "rest",
-            "key": "rest",
-            "label": "休"
+            "key": "athx",
+            "label": "AthX",
+            "session": "sessions/aux/athx-hybrid.json"
           },
           {
             "weekday": 7,
@@ -663,9 +385,9 @@ module.exports = {
       }
     },
     "strength-time-efficient": {
-      "name": "5/3/1 力量计划",
-      "badge": "可持续",
-      "meta": "12周 · 5/3/1 顶组周循环 + 每周肩推专项",
+      "name": "省时顶组",
+      "badge": "省时间",
+      "meta": "5/3/1 顶组循环 + 肩背；单次更短，护恢复可长期练",
       "combinations": {
         "none": [
           {
@@ -696,58 +418,13 @@ module.exports = {
             "weekday": 5,
             "type": "strength",
             "key": "ohp",
-            "label": "肩推"
+            "label": "肩背"
           },
           {
             "weekday": 6,
             "type": "rest",
             "key": "rest",
             "label": "休"
-          },
-          {
-            "weekday": 7,
-            "type": "rest",
-            "key": "rest",
-            "label": "休"
-          }
-        ],
-        "running": [
-          {
-            "weekday": 1,
-            "type": "strength",
-            "key": "squat",
-            "label": "深蹲"
-          },
-          {
-            "weekday": 2,
-            "type": "strength",
-            "key": "bench",
-            "label": "卧推"
-          },
-          {
-            "weekday": 3,
-            "type": "strength",
-            "key": "deadlift",
-            "label": "硬拉"
-          },
-          {
-            "weekday": 4,
-            "type": "rest",
-            "key": "rest",
-            "label": "休"
-          },
-          {
-            "weekday": 5,
-            "type": "strength",
-            "key": "ohp",
-            "label": "肩推"
-          },
-          {
-            "weekday": 6,
-            "type": "aux_zone2",
-            "key": "running",
-            "label": "跑",
-            "session": "sessions/aux/running-zone2.json"
           },
           {
             "weekday": 7,
@@ -785,7 +462,7 @@ module.exports = {
             "weekday": 5,
             "type": "strength",
             "key": "ohp",
-            "label": "肩推"
+            "label": "肩背"
           },
           {
             "weekday": 6,
@@ -830,7 +507,7 @@ module.exports = {
             "weekday": 5,
             "type": "strength",
             "key": "ohp",
-            "label": "肩推"
+            "label": "肩背"
           },
           {
             "weekday": 6,
@@ -847,7 +524,7 @@ module.exports = {
             "label": "休"
           }
         ],
-        "crossfit+running": [
+        "athx": [
           {
             "weekday": 1,
             "type": "strength",
@@ -868,32 +545,127 @@ module.exports = {
           },
           {
             "weekday": 4,
+            "type": "rest",
+            "key": "rest",
+            "label": "休"
+          },
+          {
+            "weekday": 5,
+            "type": "strength",
+            "key": "ohp",
+            "label": "肩背"
+          },
+          {
+            "weekday": 6,
+            "type": "aux_high",
+            "key": "athx",
+            "label": "AthX",
+            "session": "sessions/aux/athx-hybrid.json"
+          },
+          {
+            "weekday": 7,
+            "type": "rest",
+            "key": "rest",
+            "label": "休"
+          }
+        ]
+      }
+    },
+    "strength-build": {
+      "name": "四天力量",
+      "badge": "练饱满",
+      "meta": "蹲 / 卧推 / 硬拉 / 肩背各一天；力量上涨同时练得更厚实",
+      "combinations": {
+        "none": [
+          {
+            "weekday": 1,
+            "type": "strength",
+            "key": "squat",
+            "label": "深蹲"
+          },
+          {
+            "weekday": 2,
+            "type": "strength",
+            "key": "bench",
+            "label": "卧推"
+          },
+          {
+            "weekday": 3,
+            "type": "strength",
+            "key": "deadlift",
+            "label": "硬拉"
+          },
+          {
+            "weekday": 4,
+            "type": "rest",
+            "key": "rest",
+            "label": "休"
+          },
+          {
+            "weekday": 5,
+            "type": "strength",
+            "key": "ohp",
+            "label": "肩背"
+          },
+          {
+            "weekday": 6,
+            "type": "rest",
+            "key": "rest",
+            "label": "休"
+          },
+          {
+            "weekday": 7,
+            "type": "rest",
+            "key": "rest",
+            "label": "休"
+          }
+        ],
+        "crossfit": [
+          {
+            "weekday": 1,
+            "type": "strength",
+            "key": "squat",
+            "label": "深蹲"
+          },
+          {
+            "weekday": 2,
+            "type": "strength",
+            "key": "bench",
+            "label": "卧推"
+          },
+          {
+            "weekday": 3,
+            "type": "strength",
+            "key": "deadlift",
+            "label": "硬拉"
+          },
+          {
+            "weekday": 4,
+            "type": "rest",
+            "key": "rest",
+            "label": "休"
+          },
+          {
+            "weekday": 5,
+            "type": "strength",
+            "key": "ohp",
+            "label": "肩背"
+          },
+          {
+            "weekday": 6,
             "type": "aux_high",
             "key": "crossfit",
             "label": "CF",
             "session": "sessions/aux/crossfit-short-metcon.json"
           },
           {
-            "weekday": 5,
-            "type": "strength",
-            "key": "ohp",
-            "label": "肩推"
-          },
-          {
-            "weekday": 6,
-            "type": "aux_zone2",
-            "key": "running",
-            "label": "跑",
-            "session": "sessions/aux/running-zone2.json"
-          },
-          {
             "weekday": 7,
             "type": "rest",
             "key": "rest",
             "label": "休"
           }
         ],
-        "hyrox+running": [
+        "hyrox": [
           {
             "weekday": 1,
             "type": "strength",
@@ -914,6 +686,18 @@ module.exports = {
           },
           {
             "weekday": 4,
+            "type": "rest",
+            "key": "rest",
+            "label": "休"
+          },
+          {
+            "weekday": 5,
+            "type": "strength",
+            "key": "ohp",
+            "label": "肩背"
+          },
+          {
+            "weekday": 6,
             "type": "aux_low",
             "key": "hyrox",
             "label": "Hyrox轻",
@@ -921,26 +705,13 @@ module.exports = {
             "intensity": "technique"
           },
           {
-            "weekday": 5,
-            "type": "strength",
-            "key": "ohp",
-            "label": "肩推"
-          },
-          {
-            "weekday": 6,
-            "type": "aux_zone2",
-            "key": "running",
-            "label": "跑",
-            "session": "sessions/aux/running-zone2.json"
-          },
-          {
             "weekday": 7,
             "type": "rest",
             "key": "rest",
             "label": "休"
           }
         ],
-        "crossfit+hyrox": [
+        "athx": [
           {
             "weekday": 1,
             "type": "strength",
@@ -961,23 +732,22 @@ module.exports = {
           },
           {
             "weekday": 4,
-            "type": "aux_high",
-            "key": "crossfit",
-            "label": "CF",
-            "session": "sessions/aux/crossfit-short-metcon.json",
-            "note": "双硬辅只保留短 CF；Hyrox 暂缓"
+            "type": "rest",
+            "key": "rest",
+            "label": "休"
           },
           {
             "weekday": 5,
             "type": "strength",
             "key": "ohp",
-            "label": "肩推"
+            "label": "肩背"
           },
           {
             "weekday": 6,
-            "type": "rest",
-            "key": "rest",
-            "label": "休"
+            "type": "aux_high",
+            "key": "athx",
+            "label": "AthX",
+            "session": "sessions/aux/athx-hybrid.json"
           },
           {
             "weekday": 7,

@@ -1,12 +1,29 @@
 const storage = require('../../../utils/storage')
+const disclaimer = require('../../../services/disclaimer')
+
+var EFFORT_OPTIONS = [
+  { id: 'easy', label: '轻松练练', hint: '先把习惯养住，练完不累垮' },
+  { id: 'solid', label: '好好练', hint: '认真进步，剂量适中、能长期坚持' },
+  { id: 'hard', label: '拼一把', hint: '愿意多投入，想尽快看到涨力' }
+]
+
+function hintFor(effort) {
+  for (var i = 0; i < EFFORT_OPTIONS.length; i++) {
+    if (EFFORT_OPTIONS[i].id === effort) return EFFORT_OPTIONS[i].hint
+  }
+  return ''
+}
 
 Page({
   data: {
     fromMe: false,
     ctaLabel: '查看推荐计划',
+    effort: 'solid',
+    effortHint: hintFor('solid'),
     sleep: 'ok',
     body: 'none',
     duration: 60,
+    effortOptions: EFFORT_OPTIONS,
     sleepOptions: [
       { id: 'good', label: '很好' },
       { id: 'ok', label: '一般' },
@@ -26,11 +43,15 @@ Page({
 
   onLoad(query) {
     const fromMe = !!(query && query.from === 'me')
+    if (!fromMe && !disclaimer.ensureConsent()) return
     const p = storage.getProfile() || {}
     const h = p.habits || {}
+    const effort = h.effort || 'solid'
     this.setData({
       fromMe: fromMe,
       ctaLabel: fromMe ? '保存' : '查看推荐计划',
+      effort: effort,
+      effortHint: hintFor(effort),
       sleep: h.sleep || 'ok',
       body: h.body || 'none',
       duration: h.durationMin || 60
@@ -40,7 +61,9 @@ Page({
   pick(e) {
     const { field, id } = e.currentTarget.dataset
     const value = field === 'duration' ? Number(id) : id
-    this.setData({ [field]: value })
+    const patch = { [field]: value }
+    if (field === 'effort') patch.effortHint = hintFor(value)
+    this.setData(patch)
   },
 
   next() {
@@ -48,6 +71,7 @@ Page({
     storage.setProfile(
       Object.assign({}, prev, {
         habits: {
+          effort: this.data.effort || 'solid',
           sleep: this.data.sleep,
           body: this.data.body,
           durationMin: Number(this.data.duration)

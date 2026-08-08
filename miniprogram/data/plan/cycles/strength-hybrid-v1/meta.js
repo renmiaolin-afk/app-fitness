@@ -3,7 +3,7 @@ module.exports = {
   "name": "力量举周期",
   "planId": "strength-hybrid-mix",
   "goal": "三大项总和",
-  "principle": "三套独立力量举：挪威 / 线性5×5 / 5/3/1；每周固定肩推专项日（实力推），辅项补背部。辅助嵌入调节日。",
+  "principle": "四套独立力量举：挪威 / 线性5×5 / 5/3/1 / 四天力量；每周固定肩背日（实力推+引体/背辅）。辅助（CF/Hyrox/AthX）单选嵌入调节日。",
   "weeks": 4,
   "optionalTestWeek": 5,
   "scheduling": {
@@ -11,10 +11,9 @@ module.exports = {
     "doseRulesFile": "../../scheduling/dose-rules.json",
     "auxiliariesFile": "../../profiles/auxiliaries.json",
     "defaultAuxiliaries": [
-      "crossfit",
-      "running"
+      "crossfit"
     ],
-    "note": "七天结构以 week-slots 按辅助组合解析为准；下方 weekTemplate 为挪威主计划+跑+CF 的回退模板"
+    "note": "七天结构以 week-slots 按辅助组合解析为准；下方 weekTemplate 为挪威主计划+CF 的回退模板"
   },
   "weekTemplate": [
     {
@@ -37,14 +36,14 @@ module.exports = {
     },
     {
       "weekday": 4,
-      "key": "running",
-      "label": "跑",
-      "type": "aux_zone2"
+      "key": "rest",
+      "label": "休",
+      "type": "rest"
     },
     {
       "weekday": 5,
       "key": "ohp",
-      "label": "肩推",
+      "label": "肩背",
       "type": "strength"
     },
     {

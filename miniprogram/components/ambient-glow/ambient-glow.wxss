@@ -9,6 +9,8 @@
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
+  --glow-dur-a: 22s;
+  --glow-dur-b: 28s;
 }
 
 .blob {
@@ -28,7 +30,7 @@
     rgba(255, 69, 58, 0.22) 36%,
     transparent 70%
   );
-  animation: glow-breathe-a 22s ease-in-out infinite alternate;
+  animation: glow-breathe-a var(--glow-dur-a) ease-in-out infinite alternate;
 }
 
 .blob.b {
@@ -39,26 +41,30 @@
   top: -20%;
   background: radial-gradient(
     ellipse at center,
-    rgba(255, 110, 50, 0.28) 0%,
+    rgba(255, 45, 85, 0.28) 0%,
     transparent 65%
   );
-  animation: glow-breathe-b 28s ease-in-out infinite alternate;
+  animation: glow-breathe-b var(--glow-dur-b) ease-in-out infinite alternate;
 }
 
 @keyframes glow-breathe-a {
   0% {
     opacity: 0.55;
+    transform: scale(0.96);
   }
   100% {
     opacity: 1;
+    transform: scale(1.04);
   }
 }
 
 @keyframes glow-breathe-b {
   0% {
     opacity: 0.4;
+    transform: scale(1.03);
   }
   100% {
-    opacity: 0.85;
+    opacity: 0.9;
+    transform: scale(0.97);
   }
 }

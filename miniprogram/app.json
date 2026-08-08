@@ -3,6 +3,7 @@
     "pages/today/today",
     "pages/me/me",
     "pages/cycle/cycle",
+    "pages/onboarding/disclaimer/disclaimer",
     "pages/onboarding/ability/ability",
     "pages/onboarding/habits/habits",
     "pages/onboarding/plans/plans",

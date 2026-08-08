@@ -34,30 +34,52 @@ const KEY_TO_STRENGTH_DAY = {
 const AUX_SESSIONS = {
   'sessions/aux/running-zone2.json': require('../data/plan/sessions/aux/running-zone2.js'),
   'sessions/aux/crossfit-short-metcon.json': require('../data/plan/sessions/aux/crossfit-short-metcon.js'),
-  'sessions/aux/hyrox-stations.json': require('../data/plan/sessions/aux/hyrox-stations.js')
+  'sessions/aux/hyrox-stations.json': require('../data/plan/sessions/aux/hyrox-stations.js'),
+  'sessions/aux/athx-hybrid.json': require('../data/plan/sessions/aux/athx-hybrid.js')
 }
 
-/** 文案补充（name/badge/meta 一律以 week-slots 真源为准） */
+/** 文案：练什么 + 练完会怎样（展示用） */
 const PLAN_COPY = {
   'strength-hybrid-mix': {
-    problem: '挪威课内波浪：70% 4×4 → 80% 2×2 → 70% 1×8；另有肩推日补肩背。',
-    goal: '恢复好、能练满的中高级首选。'
+    problem: '练什么：挪威波浪（4×4→2×2→1×8）高频蹲推拉，另加肩背日与轻拉日。',
+    goal: '练完会怎样：恢复跟得上时，三大项上涨通常最快。'
   },
   'strength-linear': {
-    problem: '死组 5×5（硬拉 1×5）+ 肩推日——新手到早中级最稳。',
-    goal: '结构简单，连续加重更可控。'
+    problem: '练什么：深蹲/卧推 5×5、硬拉 1×5，外加一天肩背（实力推+引体）。',
+    goal: '练完会怎样：适合打基础，每周能稳定看到重量往上走。'
   },
   'strength-time-efficient': {
-    problem: '温德勒 5/3/1 + 肩推日：三力各一天，时间紧也能长期涨。',
-    goal: '省时、护恢复，适合持续练下去。'
+    problem: '练什么：5/3/1 顶组为主，三力各一天 + 肩背日，单次更短。',
+    goal: '练完会怎样：时间紧也能长期坚持，力量缓慢但持续上涨。'
+  },
+  'strength-build': {
+    problem: '练什么：蹲、卧推、硬拉、肩背四天拆开练，组数容量更足。',
+    goal: '练完会怎样：三大项继续涨，同时肩背腿围度更饱满、看着更厚。'
   }
 }
 
 const PLAN_ORDER = [
   'strength-hybrid-mix',
   'strength-linear',
-  'strength-time-efficient'
+  'strength-time-efficient',
+  'strength-build'
 ]
+
+const AUX_ALLOWED = { crossfit: 1, hyrox: 1, athx: 1 }
+
+/** 旧档案 running → athx；只保留 1 项合法辅助 */
+function normalizeAuxiliaries(list) {
+  var raw = list || []
+  var out = []
+  for (var i = 0; i < raw.length; i++) {
+    var id = raw[i]
+    if (id === 'running') id = 'athx'
+    if (!AUX_ALLOWED[id]) continue
+    if (out.indexOf(id) >= 0) continue
+    out.push(id)
+  }
+  return out.slice(0, 1)
+}
 
 const PLAN_OPTIONS = PLAN_ORDER.map(function (id) {
   var slot = (weekSlots.plans && weekSlots.plans[id]) || {}
@@ -116,7 +138,7 @@ function serializeWeekSlots(slots) {
 
 function getWeekSlots(planId, auxiliariesList, overrideSlots) {
   const plan = weekSlots.plans[planId] || weekSlots.plans['strength-hybrid-mix']
-  const key = auxKey(auxiliariesList)
+  const key = auxKey(normalizeAuxiliaries(auxiliariesList))
   var slots = (plan.combinations && plan.combinations[key]) || plan.combinations.none
   if (overrideSlots && overrideSlots.length === 7) {
     slots = overrideSlots
@@ -369,17 +391,17 @@ function trimNorwegianAccessories(list, slotKey) {
  * 主项 scheme：由 planId + 槽位决定
  */
 function resolveMainScheme(planId, slotKey) {
-  // 肩推专项日：三套计划统一走 OHP 处方，不用挪威/531/5×5 主项波浪
+  // 肩背日：各计划统一走 OHP 处方，不用挪威/531/5×5 主项波浪
   if (slotKey === 'ohp') return 'ohp'
   if (planId === 'strength-time-efficient') return '531'
-  if (planId === 'strength-linear') return 'linear5x5'
+  if (planId === 'strength-linear' || planId === 'strength-build') return 'linear5x5'
   if (slotKey === 'deadlift_light') return 'light'
   if (slotKey === 'squat_vol') return 'volume'
   return 'norwegian'
 }
 
 function accessoryNoteForScheme(scheme) {
-  if (scheme === 'ohp') return '肩推专项日：主项实力推，辅项补背部与肩袖'
+  if (scheme === 'ohp') return '肩背日：主项实力推，辅项补背部与肩袖'
   if (scheme === '531') return '5/3/1 主课后辅项从简，最多 2 个轻量动作'
   if (scheme === 'linear5x5') return '5×5 主课后辅项从简，最多 2 个轻量动作'
   return '挪威主课后辅项从简，最多 2 个轻量动作'
@@ -537,6 +559,7 @@ function structureCfSession(rawBlocks, meta) {
       capMin: w.capMin || null,
       detail: detail,
       setsText: detail,
+      movements: w.movements || [],
       cues: w.cues || [],
       hint: detail,
       role: 'wod'
@@ -660,6 +683,68 @@ function getCfSession(profile, slots, slotIndex) {
   )
 }
 
+/** AthX：力量区按三大项 1RM 给出可执行重量 */
+function enrichAthxSession(session, profile) {
+  if (!session) return session
+  var oneRm = (profile && profile.oneRm) || {}
+  var squat = Number(oneRm.squat) || 0
+  var bench = Number(oneRm.bench) || 0
+  var deadlift = Number(oneRm.deadlift) || 0
+  // 3×3 留 2～3 次余力 ≈ 70% 深蹲 1RM
+  var squatKg = squat > 0 ? roundToStep(squat * 0.7) : 60
+  if (squatKg < 20) squatKg = 20
+  // 实力推备选：约卧推 55%（与肩背日同口径）
+  var pressKg =
+    bench > 0 ? roundToStep(bench * 0.55) : roundToStep(Math.max(20, squatKg * 0.45))
+  if (pressKg < 20) pressKg = 20
+  var swingKg =
+    squat > 0
+      ? roundToStep(Math.min(32, Math.max(12, squat * 0.18)))
+      : 16
+  var farmerEach =
+    deadlift > 0
+      ? roundToStep(Math.min(40, Math.max(14, deadlift * 0.15)))
+      : squat > 0
+        ? roundToStep(Math.min(40, Math.max(14, squat * 0.22)))
+        : 20
+
+  var blocks = (session.blocks || []).map(function (b) {
+    var blk = Object.assign({}, b)
+    var name = blk.name || ''
+    if (/力量/.test(name)) {
+      blk.kg = squatKg
+      blk.load = { type: 'percent_1rm', percentOf1rm: 0.7, lift: 'squat' }
+      blk.name = '力量区 · 深蹲'
+      blk.prescription = squatKg + ' kg · 3×3'
+      blk.cues = [
+        '杠铃深蹲 3 组 × 3 次 @ ' + squatKg + ' kg（约 70% 深蹲 1RM，留 2～3 次余力）',
+        '也可改做实力推 3×3 @ ' + pressKg + ' kg',
+        '质量优先，模拟 AthX 力量区，不追求力竭'
+      ]
+    } else if (/有氧|轻松跑/.test(name)) {
+      blk.cues = [
+        '慢跑约 ' +
+          (blk.distanceKm != null ? blk.distanceKm : 1.6) +
+          ' km / ' +
+          (blk.minutes || 12) +
+          ' 分钟，能说完整短句',
+        '无场地可改划船机同时长同配速感',
+        '练节奏与呼吸，不为冲刺'
+      ]
+    } else if (/混合|收尾|摆荡|农夫/.test(name)) {
+      blk.kg = swingKg
+      blk.cues = [
+        '壶铃摆荡 3×12 @ ' + swingKg + ' kg',
+        '农夫走 3×20 m，每手约 ' + farmerEach + ' kg',
+        '组间短歇；technique 模式负荷与趟数减半'
+      ]
+    }
+    return blk
+  })
+
+  return Object.assign({}, session, { blocks: blocks })
+}
+
 function getAuxSession(slot, profile, slots, slotIndex) {
   if (!slot) return null
 
@@ -706,6 +791,10 @@ function getAuxSession(slot, profile, slots, slotIndex) {
         layout: 'main-wod'
       }
     }
+  }
+
+  if (slot.key === 'athx' || session.auxId === 'athx') {
+    session = enrichAthxSession(session, profile)
   }
 
   return {
@@ -925,6 +1014,7 @@ module.exports = {
   cycleMeta: cycleMeta,
   PLAN_OPTIONS: PLAN_OPTIONS,
   planDisplayName: planDisplayName,
+  normalizeAuxiliaries: normalizeAuxiliaries,
   auxKey: auxKey,
   inferStrengthTier: inferStrengthTier,
   getWeekSlots: getWeekSlots,

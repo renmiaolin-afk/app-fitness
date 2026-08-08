@@ -213,6 +213,17 @@
   font-style: italic;
 }
 
+.tab.left:not(.active) .l,
+.tab.missed:not(.active) .l {
+  color: var(--muted);
+  opacity: 0.75;
+}
+
+.tab.done:not(.active) .l {
+  color: var(--accent);
+  opacity: 0.9;
+}
+
 .body-adjust {
   margin-bottom: 24rpx;
 }
@@ -303,7 +314,7 @@
   line-height: 1.35;
 }
 
-/* 左重量图 · 中动作/内容 · 右组数 */
+/* 左顺序 · 中动作/组数 · 右重量 */
 .set-cards {
   display: flex;
   flex-direction: column;
@@ -321,42 +332,22 @@
   box-sizing: border-box;
 }
 
-.kg-plate {
-  width: 112rpx;
-  height: 112rpx;
-  border-radius: 20rpx;
-  flex-shrink: 0;
+.set-card-order {
+  width: 48rpx;
+  min-width: 48rpx;
+  flex: 0 0 48rpx;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at 35% 30%, #3a3a3c 0%, #1c1c1e 55%, #0a0a0a 100%);
-  border: none;
-  box-sizing: border-box;
 }
 
-.kg-plate-num {
-  font-size: 36rpx;
+.set-card-order-num {
+  font-size: 32rpx;
   font-weight: 800;
-  color: #fff;
-  line-height: 1.1;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.5rpx;
-  text-align: center;
-  max-width: 100%;
-  padding: 0 4rpx;
-}
-
-.kg-plate.body .kg-plate-num {
-  font-size: 26rpx;
-}
-
-.kg-plate-unit {
-  margin-top: 2rpx;
-  font-size: 20rpx;
-  font-weight: 600;
-  color: rgba(235, 235, 245, 0.4);
+  font-style: italic;
+  color: rgba(235, 235, 245, 0.45);
   line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 .set-card-mid {
@@ -391,34 +382,54 @@
   font-size: 24rpx;
   font-weight: 500;
   color: rgba(235, 235, 245, 0.45);
-  line-height: 1.3;
+  line-height: 1.35;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  word-break: break-word;
 }
 
-.set-card-sets {
-  flex-shrink: 0;
+.kg-plate {
+  width: 112rpx;
+  height: 112rpx;
+  min-width: 112rpx;
+  min-height: 112rpx;
+  flex: 0 0 112rpx;
+  border-radius: 20rpx;
   display: flex;
-  flex-direction: row;
-  align-items: baseline;
-  justify-content: flex-end;
-  min-width: 64rpx;
-  gap: 4rpx;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 35% 30%, #3a3a3c 0%, #1c1c1e 55%, #0a0a0a 100%);
+  border: none;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
-.sets-num {
+.kg-plate-num {
   font-size: 36rpx;
   font-weight: 800;
+  font-style: italic;
   color: #fff;
-  line-height: 1;
+  line-height: 1.1;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.5rpx;
+  text-align: center;
+  max-width: 100%;
+  padding: 0 4rpx;
 }
 
-.sets-label {
-  font-size: 22rpx;
+.kg-plate.bw .kg-plate-num {
+  font-size: 26rpx;
+  font-style: normal;
+}
+
+.kg-plate-unit {
+  margin-top: 2rpx;
+  font-size: 20rpx;
   font-weight: 600;
-  color: rgba(235, 235, 245, 0.35);
+  color: rgba(235, 235, 245, 0.4);
   line-height: 1;
 }
 
@@ -455,11 +466,15 @@
 }
 
 .acc-detail {
-  display: block;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
   margin-top: 6rpx;
   color: var(--muted);
   font-size: var(--fs-sm);
-  line-height: 1.4;
+  line-height: 1.35;
+  word-break: break-word;
 }
 
 .acc-sets {
@@ -467,4 +482,53 @@
   font-size: var(--fs-sm);
   font-weight: 500;
   flex-shrink: 0;
+}
+
+.footer-row {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 16rpx;
+}
+
+.footer-btn-side {
+  flex: 0 0 30%;
+  max-width: 220rpx;
+  min-width: 0;
+  width: auto;
+  margin: 0 !important;
+  white-space: nowrap;
+  text-align: center;
+  padding-left: 16rpx;
+  padding-right: 16rpx;
+}
+
+.footer-btn-main {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+  margin: 0 !important;
+  text-align: center;
+}
+
+.btn-secondary {
+  min-height: var(--btn-h);
+  height: auto;
+  border-radius: var(--btn-r);
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.78);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--btn-pad-y) 16rpx;
+  margin: 0;
+  border: none;
+  line-height: 1.2;
+  box-sizing: border-box;
+}
+
+.btn-secondary::after {
+  border: none;
 }

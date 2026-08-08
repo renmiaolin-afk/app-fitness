@@ -1,10 +1,7 @@
 {
-  "navigationBarTitleText": "课次总结",
+  "navigationBarTitleText": "",
   "navigationBarBackgroundColor": "#000000",
   "navigationBarTextStyle": "white",
   "backgroundColor": "#000000",
-  "usingComponents": {
-    "ambient-glow": "/components/ambient-glow/ambient-glow"
-  },
   "disableScroll": true
 }

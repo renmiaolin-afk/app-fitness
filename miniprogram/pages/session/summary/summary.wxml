@@ -2,18 +2,100 @@
 <view class="page page-dock">
   <scroll-view scroll-y class="page-scroll" enhanced="{{true}}" show-scrollbar="{{false}}" enable-flex="{{true}}">
     <view class="page-title">训练完成</view>
-    <view class="page-sub">{{name}} · 用时 {{durationMin}} 分钟 · 已自动保存</view>
+    <view class="page-sub">{{name}} · 记录已保存</view>
 
-    <view class="card score" style="margin-top: 32rpx;">
-      <view class="sec">评分</view>
-      <view class="row">
-        <text class="num">{{score}}</text>
-        <text class="msg">质量不错，组间也稳住了</text>
+    <view class="quality-hero tone-{{tone || 'great'}}" style="margin-top: 32rpx;">
+      <view class="quality-hero-top">
+        <text class="quality-hero-kicker">训练总结</text>
+        <text class="quality-hero-tag">已完成</text>
+      </view>
+      <view class="quality-hero-body">
+        <text class="quality-hero-title">{{title}}</text>
+        <view class="quality-hero-score">
+          <text class="quality-hero-score-num">{{score}}</text>
+          <text class="quality-hero-score-unit">分</text>
+        </view>
+      </view>
+      <view class="quality-hero-dur {{durationExpanded ? 'open' : ''}}" wx:if="{{showDuration}}">
+        <view
+          class="quality-hero-dur-head"
+          catchtap="toggleDuration"
+          aria-role="button"
+        >
+          <text class="quality-hero-dur-label">训练总时长</text>
+          <view class="quality-hero-dur-right">
+            <text class="quality-hero-dur-time">{{durationText}}</text>
+            <view class="quality-hero-dur-toggle">
+              <text class="quality-hero-dur-chev">{{durationExpanded ? '▴' : '▾'}}</text>
+            </view>
+          </view>
+        </view>
+        <view class="quality-hero-breakdown" wx:if="{{durationExpanded}}">
+          <block wx:if="{{hasDurationItems}}">
+            <view
+              class="quality-hero-breakdown-row"
+              wx:for="{{durationItems}}"
+              wx:key="index"
+            >
+              <text class="quality-hero-breakdown-name">{{item.title}}</text>
+              <text class="quality-hero-breakdown-time">{{item.timeText}}</text>
+            </view>
+          </block>
+          <text class="quality-hero-breakdown-empty" wx:else>暂无分项用时记录</text>
+        </view>
       </view>
     </view>
 
-    <view class="card" wx:if="{{hasSets}}">
-      <view class="sec">{{name}}</view>
+    <view class="plan-card" wx:if="{{showPlan}}">
+      <view class="sec-head">
+        <text class="sec-label">{{secMainLabel}}</text>
+      </view>
+      <view class="set-cards">
+        <view class="set-card tone-{{item.tone}}" wx:for="{{mainCards}}" wx:key="index">
+          <view class="set-card-order">
+            <text class="set-card-order-num">{{index + 1}}</text>
+          </view>
+          <view class="set-card-mid">
+            <view class="set-card-top">
+              <text class="set-card-name">{{item.name}}</text>
+            </view>
+            <text class="set-card-detail">{{item.detail}}</text>
+          </view>
+          <view class="kg-plate {{item.plateClass}}">
+            <text class="kg-plate-num">{{item.kgText}}</text>
+            <text class="kg-plate-unit" wx:if="{{item.hasKg}}">kg</text>
+            <text class="kg-plate-unit" wx:elif="{{item.plateUnit}}">{{item.plateUnit}}</text>
+          </view>
+        </view>
+      </view>
+
+      <block wx:if="{{accCards.length}}">
+        <view class="sec-head sec-gap">
+          <text class="sec-label">{{secAccLabel}}</text>
+        </view>
+        <view class="set-cards">
+          <view class="set-card tone-{{item.tone}}" wx:for="{{accCards}}" wx:key="index">
+            <view class="set-card-order">
+              <text class="set-card-order-num">{{index + 1}}</text>
+            </view>
+            <view class="set-card-mid">
+              <view class="set-card-top">
+                <text class="set-card-name">{{item.name}}</text>
+              </view>
+              <text class="set-card-detail">{{item.detail}}</text>
+            </view>
+            <view class="kg-plate {{item.plateClass}}">
+              <text class="kg-plate-num">{{item.kgText}}</text>
+              <text class="kg-plate-unit" wx:if="{{item.hasKg}}">kg</text>
+              <text class="kg-plate-unit" wx:elif="{{item.plateUnit}}">{{item.plateUnit}}</text>
+            </view>
+          </view>
+        </view>
+      </block>
+    </view>
+
+    <view class="card" wx:if="{{hasSets && !showPlan}}">
+      <view class="sec">本组完成记录</view>
       <view class="set" wx:for="{{sets}}" wx:key="index">
         <text>{{item.title}}</text>
         <text class="kg">{{item.detail}}</text>

@@ -1,0 +1,49 @@
+<view class="page page-dock">
+  <scroll-view
+    scroll-y
+    class="page-scroll"
+    enhanced="{{true}}"
+    show-scrollbar="{{false}}"
+    enable-flex="{{true}}"
+  >
+    <view class="page-title">{{title}}</view>
+    <view class="page-sub">最后更新：{{updated}}{{viewOnly ? '' : ' · 建档与训练前须同意'}}</view>
+
+    <view class="legal-intro">{{intro}}</view>
+
+    <view class="legal-card">
+      <view class="legal-block" wx:for="{{sections}}" wx:key="heading">
+        <text class="legal-h">{{item.heading}}</text>
+        <text class="legal-p">{{item.body}}</text>
+      </view>
+      <text class="legal-ver">版本 {{version}}</text>
+    </view>
+
+    <view class="legal-note">{{footnote}}</view>
+  </scroll-view>
+
+  <view class="footer disc-footer">
+    <block wx:if="{{viewOnly}}">
+      <button class="btn-primary" bindtap="closeView">返回</button>
+    </block>
+    <block wx:else>
+      <view
+        class="check-row {{agreed ? 'on' : ''}}"
+        bindtap="toggleAgree"
+        aria-role="checkbox"
+        aria-checked="{{agreed}}"
+      >
+        <view class="check-box">
+          <text wx:if="{{agreed}}" class="check-mark">✓</text>
+        </view>
+        <text class="check-label">我已阅读并同意《法律免责声明》</text>
+      </view>
+      <button
+        class="btn-primary {{agreed ? '' : 'locked'}}"
+        disabled="{{!agreed}}"
+        bindtap="accept"
+      >同意并继续</button>
+      <view class="btn-link disc-exit" bindtap="exitApp">不同意并退出</view>
+    </block>
+  </view>
+</view>

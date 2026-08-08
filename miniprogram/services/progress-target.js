@@ -39,7 +39,7 @@ function modifier(profile) {
   var aux = (profile && profile.auxiliaries) || []
   var high = 0
   for (var i = 0; i < aux.length; i++) {
-    if (aux[i] === 'crossfit' || aux[i] === 'hyrox') high++
+    if (aux[i] === 'crossfit' || aux[i] === 'hyrox' || aux[i] === 'athx') high++
   }
   if (high >= 2) m *= 0.85
   else if (high === 1) m *= 0.92

@@ -46,6 +46,24 @@ function getLogs() {
   return wx.getStorageSync(KEYS.logs) || []
 }
 
+/** Remove leave logs for a calendar day + weekday. Returns how many removed. */
+function removeLeaveLog(date, weekday) {
+  const list = wx.getStorageSync(KEYS.logs) || []
+  const wd = Number(weekday)
+  const next = list.filter(function (l) {
+    if (!l || l.kind !== 'leave') return true
+    if (l.date !== date) return true
+    return Number(l.weekday) !== wd
+  })
+  const removed = list.length - next.length
+  if (removed > 0) wx.setStorageSync(KEYS.logs, next)
+  return removed
+}
+
+function isLeaveLog(log) {
+  return !!(log && log.kind === 'leave')
+}
+
 module.exports = {
   KEYS,
   getProfile,
@@ -55,5 +73,7 @@ module.exports = {
   setDraft,
   clearDraft,
   appendLog,
-  getLogs
+  getLogs,
+  removeLeaveLog,
+  isLeaveLog
 }
