@@ -3,24 +3,19 @@
 
 <view class="train" style="padding-top: {{navPadTop}}px;">
   <view class="top">
-    <text class="phase-label" wx:if="{{phaseLabel}}">{{phaseLabel}}</text>
     <text class="name">{{name}}</text>
-    <view class="progress" wx:if="{{dotsCompact}}">
+    <text class="head-meta">{{headMeta}}</text>
+    <view class="progress">
       <view class="progress-track">
         <view class="progress-fill" style="width: {{progressPct}}%;"></view>
       </view>
-      <text class="progress-label">{{progressLabel}}</text>
     </view>
-    <view class="dots" wx:else>
-      <view wx:for="{{dots}}" wx:key="index" class="dot {{item}}"></view>
-    </view>
-    <view class="sub">{{subText}}</view>
   </view>
 
   <view class="mid">
     <view
       class="ring {{timerHot ? 'hot' : ''}} {{phase === 'rest' ? 'rest' : ''}} {{paused ? 'paused' : ''}}"
-      style="background: conic-gradient(from -90deg, {{ringColor}} {{ringPct}}%, rgba(255,255,255,0.12) 0);"
+      style="background: conic-gradient(from -90deg, {{ringColor}} {{ringPct}}%, rgba(255,255,255,0.08) 0);"
     >
       <view class="ring-inner">
         <text class="ring-time" style="color: {{ringColor}};">{{displayTime}}</text>
@@ -28,15 +23,22 @@
       </view>
     </view>
 
-    <view class="load">
-      <view class="kg-row" wx:if="{{kgLabel}}">
-        <text class="kg">{{kgLabel}}</text>
+    <view class="metrics">
+      <view class="metric">
+        <text class="metric-label">{{metricKgLabel}}</text>
+        <view class="metric-value-row">
+          <text class="metric-value">{{metricKg}}</text>
+          <text class="metric-unit" wx:if="{{metricKgUnit}}">{{metricKgUnit}}</text>
+        </view>
       </view>
-      <view class="kg-row" wx:else>
-        <text class="kg">{{kg}}</text>
-        <text class="kg-unit">KG</text>
+      <view class="metric-rule" aria-hidden="true"></view>
+      <view class="metric">
+        <text class="metric-label">{{metricRepsLabel}}</text>
+        <view class="metric-value-row">
+          <text class="metric-value">{{metricReps}}</text>
+          <text class="metric-unit" wx:if="{{metricRepsUnit}}">{{metricRepsUnit}}</text>
+        </view>
       </view>
-      <view class="info">{{targetInfo}}</view>
     </view>
   </view>
 
@@ -44,51 +46,124 @@
     <block wx:if="{{phase === 'ready'}}">
       <view class="cta-row">
         <view class="btn-side ghost"></view>
-        <button class="btn-primary cta-main" bindtap="startSet" disabled="{{showCountdown}}">开始本组</button>
-        <view class="btn-side icon" bindtap="openExit" aria-role="button" aria-label="关闭">✕</view>
+        <button
+          class="btn-primary cta-main"
+          hover-class="pressable-hover"
+          hover-start-time="0"
+          hover-stay-time="80"
+          bindtap="startSet"
+          disabled="{{showCountdown}}"
+        >开始本组</button>
+        <view
+          class="btn-side icon"
+          hover-class="pressable-hover"
+          hover-start-time="0"
+          hover-stay-time="80"
+          bindtap="openExit"
+          aria-role="button"
+          aria-label="关闭"
+        >✕</view>
       </view>
     </block>
     <block wx:elif="{{phase === 'working'}}">
       <view class="cta-row">
         <view
           class="btn-side icon"
+          hover-class="pressable-hover"
+          hover-start-time="0"
+          hover-stay-time="80"
           bindtap="togglePause"
           aria-role="button"
           aria-label="{{paused ? '继续' : '暂停'}}"
         >{{paused ? '▶' : '⏸'}}</view>
         <button
           class="btn-primary cta-main {{canComplete ? '' : 'locked'}}"
+          hover-class="pressable-hover"
+          hover-start-time="0"
+          hover-stay-time="80"
           bindtap="endSet"
           disabled="{{!canComplete}}"
         >{{completeLabel}}</button>
-        <view class="btn-side icon" bindtap="openExit" aria-role="button" aria-label="关闭">✕</view>
+        <view
+          class="btn-side icon"
+          hover-class="pressable-hover"
+          hover-start-time="0"
+          hover-stay-time="80"
+          bindtap="openExit"
+          aria-role="button"
+          aria-label="关闭"
+        >✕</view>
       </view>
     </block>
     <block wx:else>
       <view class="cta-row">
-        <view class="btn-side" bindtap="addRest">+20</view>
-        <button class="btn-primary cta-main" bindtap="nextSet" disabled="{{showCountdown}}">下一组</button>
-        <view class="btn-side icon" bindtap="openExit" aria-role="button" aria-label="关闭">✕</view>
+        <view
+          class="btn-side"
+          hover-class="pressable-hover"
+          hover-start-time="0"
+          hover-stay-time="80"
+          bindtap="addRest"
+        >+20</view>
+        <button
+          class="btn-primary cta-main"
+          hover-class="pressable-hover"
+          hover-start-time="0"
+          hover-stay-time="80"
+          bindtap="nextSet"
+          disabled="{{showCountdown}}"
+        >不歇了接着干</button>
+        <view
+          class="btn-side icon"
+          hover-class="pressable-hover"
+          hover-start-time="0"
+          hover-stay-time="80"
+          bindtap="openExit"
+          aria-role="button"
+          aria-label="关闭"
+        >✕</view>
       </view>
     </block>
   </view>
 
   <view class="countdown-mask" wx:if="{{showCountdown}}" catchtouchmove="noop">
-    <view class="countdown-num">{{countdownNum}}</view>
+    <view class="countdown-num pop-num {{countdownPop ? 'pop' : ''}}">{{countdownNum}}</view>
     <view class="countdown-label">准备开始</view>
   </view>
 
-  <view class="mask" wx:if="{{showExit}}" catchtouchmove="noop" bindtap="closeExit">
-    <view class="sheet" catchtap="noop">
+  <view
+    class="mask sheet-mask {{sheetOpen ? 'sheet-open' : ''}}"
+    wx:if="{{showExit}}"
+    catchtouchmove="noop"
+    bindtap="closeExit"
+  >
+    <view class="sheet sheet-panel {{sheetOpen ? 'sheet-open' : ''}}" catchtap="noop">
       <view class="sheet-handle"></view>
-      <view class="sheet-title">要离开训练吗？</view>
-      <view class="sheet-desc">已完成的组会保存，今天还能接着练。</view>
+      <view class="sheet-title">先离开一下？</view>
+      <view class="sheet-desc">练过的组会留着，今天还能接着练。</view>
       <view class="sheet-actions">
         <view class="sheet-row">
-          <button class="sheet-btn sheet-btn-primary" bindtap="closeExit">继续练</button>
-          <button class="sheet-btn sheet-btn-secondary" bindtap="saveExit">先离开，稍后继续</button>
+          <button
+            class="sheet-btn sheet-btn-primary"
+            hover-class="pressable-hover"
+            hover-start-time="0"
+            hover-stay-time="80"
+            bindtap="closeExit"
+          >继续练</button>
+          <button
+            class="sheet-btn sheet-btn-secondary"
+            hover-class="pressable-hover"
+            hover-start-time="0"
+            hover-stay-time="80"
+            bindtap="saveExit"
+          >先走，一会再练</button>
         </view>
-        <view class="sheet-btn-danger" bindtap="discardExit">放弃本次，不保存</view>
+        <view
+          class="sheet-btn-danger"
+          hover-class="pressable-hover"
+          hover-start-time="0"
+          hover-stay-time="80"
+          bindtap="discardExit"
+        >这次不算了，不保存</view>
       </view>
     </view>
   </view>

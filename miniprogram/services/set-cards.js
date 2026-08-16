@@ -652,10 +652,10 @@ function buildSessionCards(input) {
   var secAccLabel = ''
   var showSetCards = false
   var restNote =
-    '今日不安排力量与高强度训练。完成 20–30 分钟 Zone2 步行 + 髋踝活动度，保证下周训练质量。'
+    '今天歇一歇。散散步、活动开髋和脚踝就行，给后面训练留力气。'
   var auxNote = session.closed
-    ? session.note || '本周不安排此课'
-    : session.note || '按段落顺序完成，动作质量优先'
+    ? session.note || '这周这节先不上'
+    : session.note || '按顺序一段段做，动作做标准比赶数量重要'
 
   if (isRest) {
     return {
@@ -670,14 +670,14 @@ function buildSessionCards(input) {
       accCards: [],
       restNote: restNote,
       auxNote: '',
-      mainName: '主动恢复'
+      mainName: '轻松恢复'
     }
   }
 
   if (isStrength) {
     showSetCards = true
-    secMainLabel = '主项'
-    secAccLabel = '辅项'
+    secMainLabel = '今天主练'
+    secAccLabel = '后面几个动作'
     var mainName = input.mainName || copy.moveName((input.main && input.main.name) || '')
     var mainSetSheet = input.mainSetSheet
     if (!mainSetSheet) mainSetSheet = formatMainSetSheet(input.main || {})
@@ -753,8 +753,8 @@ function buildSessionCards(input) {
     }
   } else if (isCf && !session.closed) {
     showSetCards = true
-    secMainLabel = '主项'
-    secAccLabel = '辅项'
+    secMainLabel = '今天主练'
+    secAccLabel = '后面几个动作'
     var cfMain = session.main || input.main || {}
     var cfDetail = blockDetailText(cfMain)
     // 技能准备（若有）先拆成组卡

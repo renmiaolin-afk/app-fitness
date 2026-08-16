@@ -10,20 +10,20 @@ Page({
   data: {
     body: 'normal',
     bodyOptions: BODY_OPTIONS,
-    hint: '选择状态后，重量、组数与辅项会自动调整',
-    cta: '按此开始训练'
+    hint: '选好状态后，重量和组数会自动帮你调',
+    cta: '按这个开始'
   },
 
   pick(e) {
     const id = e.currentTarget.dataset.id
     if (!id) return
-    var hint = '无变化可直接开始'
-    var cta = '按此开始训练'
+    var hint = '没什么变化，直接开始就行'
+    var cta = '按这个开始'
     if (id === 'tired') {
-      hint = '疲劳：重量略降，组数缩短，辅项精简'
+      hint = '有点累：重量降一点，少练一组，后面也精简'
       cta = '按调整后开始'
     } else if (id === 'pain') {
-      hint = '不适：保守重量，仅保留主动作'
+      hint = '不太舒服：再保守一点，只练大动作'
       cta = '按调整后开始'
     }
     this.setData({ body: id, hint: hint, cta: cta })

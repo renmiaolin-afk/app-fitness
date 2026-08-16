@@ -1,13 +1,13 @@
 <ambient-glow />
 <view class="page page-dock">
   <scroll-view scroll-y class="page-scroll" enhanced="{{true}}" show-scrollbar="{{false}}" enable-flex="{{true}}">
-    <view class="page-title">训练完成</view>
-    <view class="page-sub">{{name}} · 记录已保存</view>
+    <view class="page-title">练完了</view>
+    <view class="page-sub">{{name}} · 已经记下来了</view>
 
     <view class="quality-hero tone-{{tone || 'great'}}" style="margin-top: 32rpx;">
       <view class="quality-hero-top">
-        <text class="quality-hero-kicker">训练总结</text>
-        <text class="quality-hero-tag">已完成</text>
+        <text class="quality-hero-kicker">这节课怎么样</text>
+        <text class="quality-hero-tag">练完了</text>
       </view>
       <view class="quality-hero-body">
         <text class="quality-hero-title">{{title}}</text>
@@ -22,7 +22,7 @@
           catchtap="toggleDuration"
           aria-role="button"
         >
-          <text class="quality-hero-dur-label">训练总时长</text>
+          <text class="quality-hero-dur-label">一共练了多久</text>
           <view class="quality-hero-dur-right">
             <text class="quality-hero-dur-time">{{durationText}}</text>
             <view class="quality-hero-dur-toggle">
@@ -41,9 +41,14 @@
               <text class="quality-hero-breakdown-time">{{item.timeText}}</text>
             </view>
           </block>
-          <text class="quality-hero-breakdown-empty" wx:else>暂无分项用时记录</text>
+          <text class="quality-hero-breakdown-empty" wx:else>还没有分段用时</text>
         </view>
       </view>
+      <view class="quality-hero-cal" wx:if="{{showCalories}}">
+        <text class="quality-hero-cal-label">大约消耗</text>
+        <text class="quality-hero-cal-val">{{calorieText}}</text>
+      </view>
+      <text class="quality-hero-cal-note" wx:if="{{showCalories && calorieNote}}">{{calorieNote}}</text>
     </view>
 
     <view class="plan-card" wx:if="{{showPlan}}">
@@ -95,7 +100,7 @@
     </view>
 
     <view class="card" wx:if="{{hasSets && !showPlan}}">
-      <view class="sec">本组完成记录</view>
+      <view class="sec">这节课练了啥</view>
       <view class="set" wx:for="{{sets}}" wx:key="index">
         <text>{{item.title}}</text>
         <text class="kg">{{item.detail}}</text>
@@ -104,6 +109,6 @@
   </scroll-view>
 
   <view class="footer">
-    <button class="btn-primary" bindtap="backToday">回到今日</button>
+    <button class="btn-primary" bindtap="backToday">完成</button>
   </view>
 </view>

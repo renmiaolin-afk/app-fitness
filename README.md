@@ -77,7 +77,7 @@ strengthTier + cfLevel + 当前周次
 | 中级 | `intermediate.json` | 高翻/抓举/双力臂（馆课三段式） |
 | 高级 | `advanced.json` | 蝴蝶引体/吊环等 |
 
-周结构以 `miniprogram/data/plan/scheduling/week-slots.js` 为准：力量日（含每周**肩背**）+ 可选单辅助日（CF / Hyrox / AthX）+ 休息。计划名：挪威高频 / 线性加重 / 省时顶组 / 四天力量。
+周结构以 `miniprogram/data/plan/scheduling/week-slots.js` 为准：力量日（含每周**肩背**）+ 可选单辅助日（CF / Hyrox / AthX）+ 休息。计划名：高频力训 / 基础力训 / 精简力训 / 分化力训。
 
 当前周期 `strength-hybrid-v1`：**4 周训练**（加重 → 加重 → 维持 → 减量）+ 可选 **第 5 周测力**；力量三档 × CF 三档可独立组合。
 

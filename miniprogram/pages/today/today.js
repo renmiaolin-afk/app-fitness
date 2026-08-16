@@ -15,6 +15,7 @@ const {
 const quality = require('../../services/session-quality')
 const { formatMmSs } = require('../../utils/format')
 const disclaimer = require('../../services/disclaimer')
+const { estimateSessionCalories } = require('../../services/calories')
 
 const BODY_KEY = 'af_today_body'
 const FULL_WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -38,19 +39,21 @@ function saveBodyForToday(body) {
 function buildUi(view, draft, dayLog, body, outcomeByWd) {
   const slot = view.slot || {}
   const detail = view.detail || {}
-  const isRest = slot.type === 'rest'
+  const isEmpty = !!(slot.empty || slot.type === 'empty')
+  const isRest = !isEmpty && slot.type === 'rest'
   const grade = dayLog ? quality.ensureGrade(dayLog) : null
-  const isLeave = !!(dayLog && dayLog.kind === 'leave') && !isRest
-  const isMissed = !!(dayLog && quality.isMissedLog(dayLog)) && !isRest
-  const isCompleted = !!(dayLog && quality.isCompletedLog(dayLog)) && !isRest
+  const isLeave = !isEmpty && !!(dayLog && dayLog.kind === 'leave') && !isRest
+  const isMissed = !isEmpty && !!(dayLog && quality.isMissedLog(dayLog)) && !isRest
+  const isCompleted = !isEmpty && !!(dayLog && quality.isCompletedLog(dayLog)) && !isRest
   const session = detail.session || {}
   // 计划内容与结局解耦：请假/漏练也要展示当天课表
-  const isStrength = slot.type === 'strength' && !!detail.main
-  const isCf = !isRest && !isStrength && session.layout === 'main-wod' && !!session.main
-  const isAux = !isRest && !isStrength && !isCf
+  const isStrength = !isEmpty && slot.type === 'strength' && !!detail.main
+  const isCf = !isEmpty && !isRest && !isStrength && session.layout === 'main-wod' && !!session.main
+  const isAux = !isEmpty && !isRest && !isStrength && !isCf
   const mainBase = detail.main || {}
   const canTrain =
     view.isToday &&
+    !isEmpty &&
     !isRest &&
     !isLeave &&
     !isMissed &&
@@ -58,24 +61,24 @@ function buildUi(view, draft, dayLog, body, outcomeByWd) {
     !(session && session.closed)
 
   let ctaText = '开始训练'
-  let statusChip = '未开始'
-  var draftSummary = (draft && draft.summary) || '存在未完成课次，可从中断处继续'
+  let statusChip = '还没开始'
+  var draftSummary = (draft && draft.summary) || '有一节课没练完，可以从断的地方接着'
   if (isLeave) {
     statusChip = '已请假'
   } else if (isMissed) {
-    statusChip = dayLog.outcome === 'partial' ? '未练完' : '未训练'
+    statusChip = dayLog.outcome === 'partial' ? '练了一半' : '没练'
   } else if (draft) {
-    ctaText = '继续未完成课次'
-    statusChip = '训练中'
+    ctaText = '接着上次继续'
+    statusChip = '练着'
     if (quality.isDraftStaleOver24h(draft)) {
-      draftSummary = '超过一天的未完成课次，可从中断处继续'
+      draftSummary = '这节课搁了一天多了，还可以从断的地方接着'
     }
   } else if (isCompleted) {
-    statusChip = '已完成'
+    statusChip = '练完了'
   }
 
-  let cardTitle = isRest ? '休息日' : isLeave ? '请假' : isMissed ? '未完成' : ''
-  var showStatus = !isRest && statusChip !== '未开始'
+  let cardTitle = isRest ? '休息日' : isLeave ? '请假' : isMissed ? '没练完' : ''
+  var showStatus = !isRest && statusChip !== '还没开始'
   var qualityTitle = grade ? grade.title : ''
   var qualityScore = grade ? grade.score : null
 
@@ -107,7 +110,9 @@ function buildUi(view, draft, dayLog, body, outcomeByWd) {
   }
 
   var cards
-  if (isRest) {
+  if (isEmpty) {
+    cards = { showSetCards: false, restNote: detail.note || '' }
+  } else if (isRest) {
     cards = buildSessionCards({ type: 'rest' })
   } else if (isStrength) {
     cards = buildSessionCards({
@@ -126,7 +131,7 @@ function buildUi(view, draft, dayLog, body, outcomeByWd) {
       type: 'aux',
       layout: session.layout || '',
       session: Object.assign({}, session, {
-        name: session.name || copy.slotLabel(slot.label) || '调节'
+        name: session.name || copy.slotLabel(slot.label) || '加练'
       }),
       profile: storage.getProfile(),
       showStatus: showStatus,
@@ -134,30 +139,50 @@ function buildUi(view, draft, dayLog, body, outcomeByWd) {
     })
   }
 
-  var leaveNote = '本课作废，不计完成，也不能补练'
+  var leaveNote = '这节课就算过了，不算完成，也不能补'
   var skippedLabel = copy.slotLabel(slot.label) || ''
   if (skippedLabel) {
-    leaveNote = '已跳过「' + skippedLabel + '」，本课作废，不能补练'
+    leaveNote = '「' + skippedLabel + '」先跳过了，这节课不算完成，也不能补'
   }
 
   // 总结区：称号 + 分数；完成课展示总时长；请假附说明
   var qualityNote = isLeave ? leaveNote : ''
   var qualityTone = grade ? grade.tone : ''
-  var qualityKicker = '训练总结'
+  var qualityKicker = '这节课怎么样'
   var durationSec = isCompleted ? quality.durationSecFromLog(dayLog) : 0
   var showDuration = !!(isCompleted && durationSec > 0)
   var durationText = showDuration ? formatMmSs(durationSec) : ''
   var durationItems = showDuration ? quality.durationItemsFromLog(dayLog) : []
+  var calorieText = ''
+  var calorieNote = ''
+  var showCalories = false
+  if (isCompleted && dayLog) {
+    var cal =
+      dayLog.kcal > 0
+        ? {
+            text: dayLog.kcalText || '大约 ' + dayLog.kcal + ' 千卡',
+            note: '按体重和训练时长估算，仅供参考'
+          }
+        : estimateSessionCalories(dayLog, storage.getProfile())
+    if (cal && (cal.kcal > 0 || cal.text)) {
+      showCalories = true
+      calorieText = cal.text
+      calorieNote = cal.note || ''
+    }
+  }
 
   var canLeave =
     view.isToday &&
+    !isEmpty &&
     !isRest &&
     !isLeave &&
     !isMissed &&
     !isCompleted &&
+    !draft &&
     !(session && session.closed)
 
   return {
+    isEmpty: isEmpty,
     isRest: isRest,
     isLeave: isLeave,
     isMissed: isMissed,
@@ -196,7 +221,10 @@ function buildUi(view, draft, dayLog, body, outcomeByWd) {
     durationText: durationText,
     durationItems: durationItems,
     hasDurationItems: durationItems.length > 0,
-    auxName: session.name || copy.slotLabel(slot.label) || '调节课',
+    showCalories: showCalories,
+    calorieText: calorieText,
+    calorieNote: calorieNote,
+    auxName: session.name || copy.slotLabel(slot.label) || '加练',
     auxDuration: session.durationMin || 30,
     auxDurationText: session.closed ? '休' : (session.durationMin || 30) + ' 分钟',
     auxNote: cards.auxNote,
@@ -206,19 +234,22 @@ function buildUi(view, draft, dayLog, body, outcomeByWd) {
     hasDraft: !!draft,
     draftSummary: draftSummary,
     slots: (view.slots || []).map(function (s, i) {
-      var wd = Number(s.weekday) || i + 1
-      var ol = outcomeByWd && outcomeByWd[wd]
-      var left = !!(ol && ol.kind === 'leave')
-      var missed = !!(ol && ol.kind === 'missed')
-      var done = !!(ol && quality.isCompletedLog(ol))
-      var label = copy.slotLabelShort(s.label)
+      var calWd = Number(s.calendarWeekday) || i + 1
+      var ol = outcomeByWd && outcomeByWd[calWd]
+      var empty = !!s.empty
+      var left = !empty && !!(ol && ol.kind === 'leave')
+      var missed = !empty && !!(ol && ol.kind === 'missed')
+      var done = !empty && !!(ol && quality.isCompletedLog(ol))
+      var label = empty ? '无' : copy.slotLabelShort(s.label)
       if (left) label = '假'
       else if (missed) label = '缺'
       return {
         weekday: s.weekday,
-        dayLabel: FULL_WEEKDAY_LABELS[wd - 1] || s.dayLabel,
+        calendarWeekday: calWd,
+        dayLabel: s.dayLabel || FULL_WEEKDAY_LABELS[calWd - 1] || '',
         label: label,
         active: i === view.selectedIndex,
+        empty: empty,
         left: left,
         missed: missed,
         done: done
@@ -236,7 +267,7 @@ Page({
     phase: '',
     weekLine: '',
     weekHint: '',
-    goalText: '目标：三大项成绩',
+    goalText: '目标：把三大项练上去',
     selectedIndex: 0,
     ui: {},
     viewIsToday: true,
@@ -245,7 +276,9 @@ Page({
     moveSheetShow: false,
     moveSheetName: '',
     avatarUrl: '',
-    durationExpanded: false
+    durationExpanded: false,
+    motionEntered: false,
+    motionSettled: false
   },
 
   onShow() {
@@ -273,6 +306,7 @@ Page({
 
   refresh(selectedIndex) {
     var profile = storage.getProfile()
+    profile = quality.ensureCycleAnchors(profile, storage)
     quality.settlePastTrainingDays(profile)
     quality.maybeAdvanceTrainingWeek(profile)
     profile = storage.getProfile()
@@ -291,7 +325,9 @@ Page({
         draft = draftRaw
       }
     }
-    const selectedDate = quality.dateForWeekday(dateKey, weekday)
+    const selectedDate =
+      (view.slot && view.slot.date) ||
+      quality.dateForWeekday(dateKey, view.selectedIndex + 1)
     const dayLog = quality.findDayLog(logs, selectedDate, weekday)
     const outcomeByWd = quality.weekOutcomeMap(logs, dateKey)
     const body = loadBodyForToday()
@@ -300,7 +336,7 @@ Page({
     if (
       profile &&
       profile.lastWeekQuality &&
-      profile.trainingWeekStart === quality.mondayKey(dateKey)
+      profile.trainingWeekStart === quality.cycleWeekStartKey(profile, dateKey)
     ) {
       weekHint = quality.weekQualityHintText(profile.lastWeekQuality)
     }
@@ -310,7 +346,8 @@ Page({
       view.week +
       ' 周' +
       (view.phase ? ' · ' + view.phase : '') +
-      ' · 目标：三大项成绩'
+      ' · 目标：把三大项练上去'
+    var that = this
     this.setData({
       ready: true,
       cycleName: view.cycleName,
@@ -318,7 +355,7 @@ Page({
       phase: view.phase || '',
       weekLine: weekLine,
       weekHint: weekHint,
-      goalText: '目标：三大项成绩',
+      goalText: '目标：把三大项练上去',
       selectedIndex: view.selectedIndex,
       viewIsToday: view.isToday,
       slotType: view.slot.type,
@@ -327,6 +364,16 @@ Page({
       ui: ui,
       avatarUrl: (profile && profile.avatarUrl) || ''
     })
+    if (!this._motionPlayed) {
+      this._motionPlayed = true
+      this.setData({ motionEntered: false, motionSettled: false })
+      setTimeout(function () {
+        that.setData({ motionEntered: true })
+        setTimeout(function () {
+          that.setData({ motionSettled: true })
+        }, 420)
+      }, 30)
+    }
   },
 
   pickBody(e) {
@@ -364,6 +411,8 @@ Page({
 
   selectDay(e) {
     const index = Number(e.currentTarget.dataset.index)
+    const slots = (this.data.ui && this.data.ui.slots) || []
+    if (slots[index] && slots[index].empty) return
     this.setData({ durationExpanded: false })
     this.refresh(index)
   },
@@ -387,18 +436,18 @@ Page({
     const slot = view.slot || {}
     const label = copy.slotLabel(slot.label) || '今天的课'
     var content =
-      '「' + label + '」记为请假（0 分）。课表不后移，本课作废，不能补练。'
+      '「' + label + '」记成请假（0 分）。课表不往后挪，这节课过了就不能补。'
     if (this.data.draft) {
       content =
-        '将放弃未完成课次，并把「' +
+        '未完成的训练会放弃，并把「' +
         label +
-        '」记为请假（0 分，不能补练）。'
+        '」记成请假（0 分，不能补）。'
     }
     wx.showModal({
       title: '今天请假？',
       content: content,
       confirmText: '请假',
-      confirmColor: '#FF2D55',
+      confirmColor: '#ff2d55',
       success(res) {
         if (!res.confirm) return
         storage.clearDraft()
@@ -414,7 +463,7 @@ Page({
           finishedAt: Date.now()
         })
         that.refresh(that.data.selectedIndex)
-        wx.showToast({ title: '已请假', icon: 'none' })
+        wx.showToast({ title: '好，今天请假了', icon: 'none' })
       }
     })
   },
@@ -427,7 +476,7 @@ Page({
       this._view || buildTodayView(storage.getProfile(), this.data.selectedIndex)
     wx.showModal({
       title: '撤销请假？',
-      content: '撤销后可重新开始今天的训练',
+      content: '撤销后可以重新开始今天的训练',
       confirmText: '撤销',
       success(res) {
         if (!res.confirm) return
@@ -444,23 +493,23 @@ Page({
   start() {
     const ui = this.data.ui
     if (!this.data.viewIsToday) {
-      wx.showToast({ title: '非训练日不可开练', icon: 'none' })
+      wx.showToast({ title: '只能练今天的课', icon: 'none' })
       return
     }
     if (ui.isRest) {
-      wx.showToast({ title: '今天休息', icon: 'none' })
+      wx.showToast({ title: '今天休息，练不了', icon: 'none' })
       return
     }
     if (ui.isLeave) {
-      wx.showToast({ title: '今天已请假', icon: 'none' })
+      wx.showToast({ title: '今天已经请过假了', icon: 'none' })
       return
     }
     if (ui.isMissed) {
-      wx.showToast({ title: '今天没练就是没练', icon: 'none' })
+      wx.showToast({ title: '这天过去了，补不了', icon: 'none' })
       return
     }
     if (ui.isCompleted) {
-      wx.showToast({ title: '今天已练完', icon: 'none' })
+      wx.showToast({ title: '今天已经练完了', icon: 'none' })
       return
     }
     if (this.data.draft) {

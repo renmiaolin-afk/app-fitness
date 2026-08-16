@@ -6,7 +6,7 @@
         <text class="app-nav-back-label">{{navBackLabel}}</text>
       </view>
     </view>
-    <view class="page-title">今日状态</view>
+    <view class="page-title">今天感觉怎么样</view>
     <view class="page-sub">{{hint}}</view>
 
     <view class="card" style="margin-top: 32rpx;">
@@ -16,6 +16,9 @@
           wx:for="{{bodyOptions}}"
           wx:key="id"
           class="chip chip-equal {{body === item.id ? 'active' : ''}}"
+          hover-class="pressable-hover"
+          hover-start-time="0"
+          hover-stay-time="80"
           data-id="{{item.id}}"
           bindtap="pick"
         >{{item.label}}</view>
@@ -24,7 +27,13 @@
   </view>
 
   <view class="footer">
-    <button class="btn-primary" bindtap="confirm">{{cta}}</button>
-    <view class="btn-link" bindtap="skip">无变化，直接开始</view>
+    <button
+      class="btn-primary"
+      hover-class="pressable-hover"
+      hover-start-time="0"
+      hover-stay-time="80"
+      bindtap="confirm"
+    >{{cta}}</button>
+    <view class="btn-link" hover-class="pressable-hover" bindtap="skip">没什么变化，直接开始</view>
   </view>
 </view>

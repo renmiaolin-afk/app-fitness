@@ -5,9 +5,9 @@
 const { roundToStep } = require('../utils/format')
 
 const BODY_OPTIONS = [
-  { id: 'normal', label: '正常' },
-  { id: 'tired', label: '疲劳' },
-  { id: 'pain', label: '不适' }
+  { id: 'normal', label: '还行' },
+  { id: 'tired', label: '有点累' },
+  { id: 'pain', label: '不太舒服' }
 ]
 
 const BODY_PRESETS = {
@@ -76,8 +76,8 @@ function applyStrengthAdjustments(detail, adjustments) {
   }
 
   var note = ''
-  if (adj.body === 'tired') note = '已按疲劳下调：重量略降，去掉 1×8，辅项精简'
-  if (adj.body === 'pain') note = '已按不适保守处理：重量下调，去掉 1×8，仅保留主动作'
+  if (adj.body === 'tired') note = '今天有点累：重量降一点，少练一组，后面也精简了'
+  if (adj.body === 'pain') note = '今天不太舒服：重量再降一点，只练大动作'
 
   return {
     main: Object.assign({}, detail.main, {

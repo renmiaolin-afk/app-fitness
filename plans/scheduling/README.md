@@ -35,9 +35,9 @@
 
 | planId | 名称（真源 week-slots） | 策略 |
 |---|---|---|
-| `strength-hybrid-mix` | 挪威力训计划 | 4 力量 + 辅调节（4×4/2×2/1×8） |
-| `strength-linear` | 线性 5×5 计划 | 力量优先，硬辅暂缓或压到 1 次 |
-| `strength-time-efficient` | 5/3/1 力量计划 | 3 力量 + 短辅槽 |
+| `strength-frequent` | 高频力训计划 | 4 力量 + 辅调节（4×4/2×2/1×8） |
+| `strength-basic` | 线性 5×5 计划 | 力量优先，硬辅暂缓或压到 1 次 |
+| `strength-lean` | 5/3/1 力量计划 | 3 力量 + 短辅槽 |
 
 ## 伪代码
 

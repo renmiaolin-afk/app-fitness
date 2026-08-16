@@ -121,7 +121,7 @@ function getMoveMedia(name) {
   var base = String(name).replace(/（.*）/, '').replace(/\(.*\)/, '').trim()
   return CATALOG[base] || {
     title: name,
-    cues: ['保持完整幅度与稳定节奏', '按处方组次数完成', '动作变形时立即减重'],
+    cues: ['动作做完整、节奏稳住', '按屏幕上的组次数做', '动作变形了就马上减重'],
     videos: [{ title: '动作示范', src: DEMO }]
   }
 }

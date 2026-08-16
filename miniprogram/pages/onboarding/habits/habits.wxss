@@ -4,6 +4,6 @@
   margin-top: 20rpx;
   font-size: var(--fs-sm);
   font-weight: 500;
-  color: rgba(235, 235, 245, 0.48);
+  color: var(--dark-muted);
   line-height: 1.4;
 }

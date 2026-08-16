@@ -2,7 +2,7 @@ module.exports = {
   "version": 4,
   "description": "辅助组合 → 七天槽位。辅助仅单选（CF / Hyrox / AthX）。四套力量举均含每周肩背专项日。",
   "keyRule": "将用户所选 aux id 按字母序排序后用 + 拼接；空选为 none",
-  "basePlan": "strength-hybrid-mix",
+  "basePlan": "strength-frequent",
   "dayTypes": {
     "strength": "力量主课",
     "aux_high": "高强度辅助（CF / Hyrox / AthX）",
@@ -11,10 +11,10 @@ module.exports = {
     "rest": "休息"
   },
   "plans": {
-    "strength-hybrid-mix": {
-      "name": "挪威高频",
-      "badge": "涨力快",
-      "meta": "每周蹲推拉更密 + 肩背；恢复好时三大项涨得最快",
+    "strength-frequent": {
+      "name": "高频力训",
+      "badge": "涨力快（恢复跟得上时）",
+      "meta": "练得更密，恢复跟得上时三大项通常涨得最快",
       "combinations": {
         "none": [
           {
@@ -197,10 +197,10 @@ module.exports = {
         ]
       }
     },
-    "strength-linear": {
-      "name": "线性加重",
+    "strength-basic": {
+      "name": "基础力训",
       "badge": "打基础",
-      "meta": "蹲卧 5×5、硬拉 1×5 + 肩背；结构简单，适合连续进步",
+      "meta": "结构简单，每周一点点往上加，适合把底子打稳",
       "combinations": {
         "none": [
           {
@@ -384,10 +384,10 @@ module.exports = {
         ]
       }
     },
-    "strength-time-efficient": {
-      "name": "省时顶组",
+    "strength-lean": {
+      "name": "精简力训",
       "badge": "省时间",
-      "meta": "5/3/1 顶组循环 + 肩背；单次更短，护恢复可长期练",
+      "meta": "单次更短，护住恢复，适合长期坚持",
       "combinations": {
         "none": [
           {
@@ -571,10 +571,10 @@ module.exports = {
         ]
       }
     },
-    "strength-build": {
-      "name": "四天力量",
+    "strength-split": {
+      "name": "分化力训",
       "badge": "练饱满",
-      "meta": "蹲 / 卧推 / 硬拉 / 肩背各一天；力量上涨同时练得更厚实",
+      "meta": "蹲推拉和肩背拆成四天、每天容量更足，力量涨的同时练得更厚",
       "combinations": {
         "none": [
           {
@@ -761,7 +761,7 @@ module.exports = {
   },
   "resolveExample": {
     "input": {
-      "planId": "strength-hybrid-mix",
+      "planId": "strength-frequent",
       "auxiliaries": [
         "running",
         "crossfit"
@@ -778,5 +778,5 @@ module.exports = {
       "休"
     ]
   },
-  "plansNote": "挪威=高频波浪；线性5×5=稳加重；5/3/1=顶组周期省时"
+  "plansNote": "高频力训=密练涨力；基础力训=每周稳步加；精简力训=单次短；分化力训=分日练厚"
 }

@@ -110,79 +110,100 @@
   height: 36rpx;
 }
 
-/* 内容区宽 ÷ 7；内侧留白承接 skew 斜边，避免首尾被裁 */
+/* 七等分，格间左右间距 2px */
 .week-tabs {
   display: flex;
   flex-direction: row;
-  gap: 0;
+  gap: 2px;
   margin-bottom: var(--s4);
   width: 100%;
-  padding: 0 12rpx;
+  padding: 0;
   box-sizing: border-box;
   overflow: visible;
 }
 
 .tab {
   position: relative;
-  flex: 0 0 calc(100% / 7);
-  width: calc(100% / 7);
-  max-width: calc(100% / 7);
+  flex: 1 1 0;
   min-width: 0;
   box-sizing: border-box;
   z-index: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: var(--s2) 0;
+  padding: var(--s2) 2px;
   text-align: left;
   background: transparent;
   overflow: visible;
 }
 
-/* 选中背景：skewX 保证左右倾角完全一致 */
-.tab-pill {
-  position: absolute;
-  left: 50%;
-  top: calc(50% + 6rpx);
-  width: 82%;
-  height: 78%;
-  min-height: 64rpx;
-  transform: translate(-50%, -50%) skewX(-12deg);
-  transform-origin: center center;
-  border-radius: 0;
-  background: linear-gradient(180deg, #000000 0%, #1a0508 28%, #ff2d55 100%);
-  opacity: 0;
-  z-index: 0;
+.tab.empty {
   pointer-events: none;
-  transition: opacity 0.2s ease;
+  opacity: 0.4;
 }
 
-.tab.active .tab-pill {
-  opacity: 1;
-}
-
-/* 星期 + 训练名成组：组内左对齐，整组在背景内居中 */
+/* 星期 + 训练名成组：红条在星期几左侧 */
 .tab-group {
   position: relative;
   z-index: 1;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: flex-start;
+  justify-content: flex-start;
+  width: 100%;
+  max-width: 100%;
+  padding-left: 2px;
+  box-sizing: border-box;
+}
+
+.tab-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
   justify-content: center;
-  width: auto;
-  max-width: 88%;
+  min-width: 0;
+  margin-right: 2px;
+  transform: skewX(-12deg);
+  transform-origin: top left;
+}
+
+/* 选中态：星期几前的红色块，斜角与文字同向 */
+.tab-mark {
+  width: 8rpx;
+  height: 60rpx;
+  margin-top: 6rpx;
+  margin-right: 8px;
+  flex-shrink: 0;
+  background: var(--accent);
+  border-radius: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: skewX(-12deg);
+  transform-origin: center center;
+}
+
+.tab.active .tab-mark {
+  opacity: 1;
 }
 
 .tab .d,
 .tab .l {
   display: block;
-  width: auto;
+  width: 100%;
   box-sizing: border-box;
   text-align: left;
-  font-style: italic;
+  font-style: normal;
   white-space: nowrap;
   overflow: visible;
+}
+
+.tab.empty .l {
+  color: var(--label-tertiary);
+}
+
+.tab.empty .d {
+  color: var(--label-tertiary);
 }
 
 .tab .d {
@@ -204,13 +225,11 @@
 
 .tab.active .d,
 .tab.active .l {
-  color: #fff;
-  text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.25);
+  color: var(--text);
 }
 
 .tab.active .d {
   font-weight: 700;
-  font-style: italic;
 }
 
 .tab.left:not(.active) .l,
@@ -263,7 +282,7 @@
   font-size: 22rpx;
   font-weight: 600;
   letter-spacing: 3rpx;
-  color: rgba(235, 235, 245, 0.55);
+  color: var(--muted-strong);
 }
 
 .status-chip {
@@ -304,6 +323,12 @@
   color: var(--text);
 }
 
+.main-name.empty-label {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--muted);
+}
+
 .main-sets {
   font-size: var(--fs-md);
   font-weight: 700;
@@ -333,21 +358,22 @@
 }
 
 .set-card-order {
-  width: 48rpx;
-  min-width: 48rpx;
-  flex: 0 0 48rpx;
+  width: 56rpx;
+  min-width: 56rpx;
+  flex: 0 0 56rpx;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .set-card-order-num {
-  font-size: 32rpx;
+  font-size: 44rpx;
   font-weight: 800;
   font-style: italic;
-  color: rgba(235, 235, 245, 0.45);
+  color: rgba(255, 255, 255, 0.3);
   line-height: 1;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -1rpx;
 }
 
 .set-card-mid {
@@ -371,7 +397,7 @@
   min-width: 0;
   font-size: 30rpx;
   font-weight: 700;
-  color: #fff;
+  color: var(--text);
   line-height: 1.25;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -381,7 +407,7 @@
 .set-card-detail {
   font-size: 24rpx;
   font-weight: 500;
-  color: rgba(235, 235, 245, 0.45);
+  color: var(--dark-muted);
   line-height: 1.35;
   overflow: hidden;
   display: -webkit-box;
@@ -401,7 +427,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at 35% 30%, #3a3a3c 0%, #1c1c1e 55%, #0a0a0a 100%);
+  background: var(--plate-grad);
   border: none;
   box-sizing: border-box;
   overflow: hidden;
@@ -411,7 +437,7 @@
   font-size: 36rpx;
   font-weight: 800;
   font-style: italic;
-  color: #fff;
+  color: var(--text);
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.5rpx;
@@ -429,7 +455,7 @@
   margin-top: 2rpx;
   font-size: 20rpx;
   font-weight: 600;
-  color: rgba(235, 235, 245, 0.4);
+  color: var(--dark-muted);
   line-height: 1;
 }
 
@@ -491,16 +517,18 @@
   gap: 16rpx;
 }
 
-.footer-btn-side {
-  flex: 0 0 30%;
-  max-width: 220rpx;
-  min-width: 0;
-  width: auto;
+.btn-secondary.footer-btn-side {
+  flex: 0 0 96rpx;
+  width: 96rpx;
+  max-width: 96rpx;
+  min-width: 96rpx;
   margin: 0 !important;
+  padding-left: 0;
+  padding-right: 0;
   white-space: nowrap;
   text-align: center;
-  padding-left: 16rpx;
-  padding-right: 16rpx;
+  font-size: 44rpx;
+  line-height: 1;
 }
 
 .footer-btn-main {
@@ -515,7 +543,7 @@
   min-height: var(--btn-h);
   height: auto;
   border-radius: var(--btn-r);
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--fill-soft);
   color: rgba(255, 255, 255, 0.78);
   font-size: var(--fs-sm);
   font-weight: 600;

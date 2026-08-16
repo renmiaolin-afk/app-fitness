@@ -1,7 +1,7 @@
 {
   "id": "strength-hybrid-v1",
   "name": "力量举周期",
-  "planId": "strength-hybrid-mix",
+  "planId": "strength-frequent",
   "goal": "三大项总和",
   "principle": "三套独立力量举：挪威 / 线性5×5 / 5/3/1；每周固定肩推专项日（实力推），辅项补背部。辅助嵌入调节日。",
   "weeks": 4,

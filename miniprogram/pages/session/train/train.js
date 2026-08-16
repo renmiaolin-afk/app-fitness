@@ -18,6 +18,24 @@ var WORK_SET_SEC = 120
 var WARMUP_SET_SEC = 60
 var RING_TICK_MS = timerRing.TICK_MS
 
+/**
+ * 杠铃换片耗时：组间重量变化时并入休息倒计时。
+ * 蹲推拉 / 实力推等外负载组适用；自重动作不计。
+ */
+function plateChangeSec(fromSet, toSet) {
+  if (!fromSet || !toSet) return 0
+  if (fromSet.bodyweight || toSet.bodyweight) return 0
+  var fromKg = Number(fromSet.kg)
+  var toKg = Number(toSet.kg)
+  if (!(fromKg > 0) || !(toKg > 0)) return 0
+  var delta = Math.abs(toKg - fromKg)
+  if (delta < 2.5) return 0
+  if (delta >= 40) return 75
+  if (delta >= 20) return 60
+  if (delta >= 10) return 45
+  return 30
+}
+
 Page({
   data: {
     navPadTop: 64,
@@ -33,17 +51,26 @@ Page({
     displayTime: '2:00',
     unitHint: '准备开始',
     subText: '',
+    headMeta: '',
     targetInfo: '',
+    metricKgLabel: '重量',
+    metricKg: '—',
+    metricKgUnit: '',
+    metricRepsLabel: '次数',
+    metricReps: '—',
+    metricRepsUnit: '',
     phaseLabel: '',
     paused: false,
     timerHot: false,
     showExit: false,
+    sheetOpen: false,
     dots: [],
     dotsCompact: false,
     progressLabel: '',
     progressPct: 0,
     showCountdown: false,
     countdownNum: 3,
+    countdownPop: false,
     ringPct: 100,
     ringColor: 'rgba(255, 45, 85, 0.55)',
     glowIntensity: 0.55,
@@ -55,6 +82,8 @@ Page({
   timer: null,
   restTimer: null,
   countdownTimer: null,
+  sheetCloseTimer: null,
+  sheetOpenTimer: null,
   setStartedAt: 0,
   workEndsAt: 0,
   workRemainSec: WORK_SET_SEC,
@@ -111,11 +140,49 @@ Page({
     return reps !== '' ? '这一组做 ' + reps + ' 次' : '完成本组次数'
   },
 
+  /** 双指标：上小标签 · 下大数字 */
+  loadPresentation(set, phase) {
+    var kgLabel = '重量'
+    var kg = '—'
+    var kgUnit = ''
+    var repsLabel = '次数'
+    var reps = '—'
+    var repsUnit = ''
+    if (phase === 'rest') {
+      kgLabel = '下一组'
+      repsLabel = '次数'
+    } else if (phase === 'ready') {
+      kgLabel = '本组'
+      repsLabel = '次数'
+    }
+    if (set) {
+      if (set.bodyweight || (set.kind === 'accessory' && !set.kg)) {
+        kg = '自重'
+        kgUnit = ''
+      } else if (set.kg != null && set.kg !== '') {
+        kg = String(set.kg)
+        kgUnit = 'kg'
+      }
+      if (set.reps != null && set.reps !== '') {
+        reps = String(set.reps)
+        repsUnit = '次'
+      }
+    }
+    return {
+      metricKgLabel: kgLabel,
+      metricKg: kg,
+      metricKgUnit: kgUnit,
+      metricRepsLabel: repsLabel,
+      metricReps: reps,
+      metricRepsUnit: repsUnit
+    }
+  },
+
   phaseLabelForSet(set) {
-    if (!set) return '训练'
+    if (!set) return ''
     if (set.kind === 'warmup') return '热身'
-    if (set.kind === 'accessory') return '辅助动作'
-    return '力量练习'
+    if (set.kind === 'accessory') return '辅助'
+    return ''
   },
 
   displayNameForSet(set) {
@@ -123,43 +190,18 @@ Page({
     return (this.session && this.session.name) || this.data.name || ''
   },
 
-  buildSubText(setIndex, totalSets, paused) {
-    var plan = (this.session && this.session.setPlan) || []
-    var set = plan[setIndex]
-    var text = '第 ' + (setIndex + 1) + ' / ' + totalSets + ' 组'
-    if (set && set.kind === 'warmup') {
-      var wi = 0
-      var wt = 0
-      for (var i = 0; i < plan.length; i++) {
-        if (plan[i].kind === 'warmup') {
-          wt++
-          if (i <= setIndex) wi++
-        }
-      }
-      text = '热身第 ' + wi + ' / ' + wt + ' 组'
-    } else if (set && set.kind === 'accessory') {
-      var ai = 0
-      var at = 0
-      for (var a = 0; a < plan.length; a++) {
-        if (plan[a].kind === 'accessory' && plan[a].block === set.block) {
-          at++
-          if (a <= setIndex) ai++
-        }
-      }
-      text = '辅助第 ' + ai + ' / ' + at + ' 组'
-    } else if (set && set.kind === 'work') {
-      var wki = 0
-      var wkt = 0
-      for (var k = 0; k < plan.length; k++) {
-        if (plan[k].kind === 'work') {
-          wkt++
-          if (k <= setIndex) wki++
-        }
-      }
-      text = '正式第 ' + wki + ' / ' + wkt + ' 组'
-    }
+  /** 顶栏：深蹲 + 3/9 组 */
+  buildHeadMeta(setIndex, totalSets, paused) {
+    var total = totalSets || 0
+    var cur = Math.min(total, (Number(setIndex) || 0) + 1)
+    if (!(total > 0)) return paused ? '已暂停' : ''
+    var text = cur + '/' + total + ' 组'
     if (paused) text += ' · 已暂停'
     return text
+  },
+
+  buildSubText(setIndex, totalSets, paused) {
+    return this.buildHeadMeta(setIndex, totalSets, paused)
   },
 
   ringVisual(phase, paused) {
@@ -187,7 +229,7 @@ Page({
     let unitHint = '准备开始'
     if (phase === 'rest') {
       displayTime = next.restText
-      unitHint = '休息一下'
+      unitHint = this._restIncludesPlate ? '休息 · 含换片' : '休息一下'
     } else if (phase === 'working') {
       displayTime = next.timerText
       unitHint = paused ? '已暂停' : '本组剩余'
@@ -211,13 +253,16 @@ Page({
       }
     }
     var progress = this.progressMeta(next.setIndex, (this.session && this.session.setPlan) || [])
-    patch = Object.assign({}, patch || {}, ring, kgPatch, progress, {
+    var load = this.loadPresentation(curSet, phase)
+    var headMeta = this.buildHeadMeta(next.setIndex, next.totalSets, paused)
+    patch = Object.assign({}, patch || {}, ring, kgPatch, progress, load, {
       name: name,
       phaseLabel: this.phaseLabelForSet(curSet),
       displayTime: displayTime,
       unitHint: unitHint,
       targetInfo: this.setTargetInfo(curSet),
-      subText: this.buildSubText(next.setIndex, next.totalSets, paused)
+      headMeta: headMeta,
+      subText: headMeta
     })
     this.setData(patch)
   },
@@ -228,7 +273,7 @@ Page({
     if (query.resume === '1') {
       const draft = storage.getDraft()
       if (!draft || draft.kind !== 'strength') {
-        wx.showToast({ title: '没有可恢复的力量课', icon: 'none' })
+        wx.showToast({ title: '没有能接着练的力量课', icon: 'none' })
         setTimeout(function () {
           wx.navigateBack()
         }, 500)
@@ -245,14 +290,14 @@ Page({
       view0.slot && view0.slot.weekday
     )
     if (quality.isCompletedLog(dayLog0)) {
-      wx.showToast({ title: '今天已练完', icon: 'none' })
+      wx.showToast({ title: '今天已经练完了', icon: 'none' })
       setTimeout(function () {
         wx.navigateBack()
       }, 400)
       return
     }
     if (dayLog0 && dayLog0.kind === 'leave') {
-      wx.showToast({ title: '今天已请假', icon: 'none' })
+      wx.showToast({ title: '今天已经请过假了', icon: 'none' })
       setTimeout(function () {
         wx.navigateBack()
       }, 400)
@@ -262,8 +307,22 @@ Page({
     this.initFresh(payload)
   },
 
-  onUnload() {
+  onHide() {
+    this._leftForeground = true
+    if (this.session) this.persistDraft()
+    // 后台会冻结 interval，回来后按绝对结束时间续跑
     this.clearTimers()
+  },
+
+  onShow() {
+    if (!this.session) return
+    this.resumeAfterForeground()
+  },
+
+  onUnload() {
+    if (this.session) this.persistDraft()
+    this.clearTimers()
+    this.clearSheetTimers()
     wx.setKeepScreenOn({ keepScreenOn: false })
   },
 
@@ -272,7 +331,7 @@ Page({
     const view = buildTodayView(profile)
     const detail = view.detail
     if (!detail || !detail.main) {
-      wx.showToast({ title: '今日不是力量日', icon: 'none' })
+      wx.showToast({ title: '今天不是力量日', icon: 'none' })
       return
     }
     const adj = (payload && payload.adjustments) || {}
@@ -317,7 +376,9 @@ Page({
       dots: this.makeDots(0, setPlan),
       paused: false,
       showExit: false,
-      showCountdown: false
+      sheetOpen: false,
+      showCountdown: false,
+      countdownPop: false
     })
     this.persistDraft('待开始')
   },
@@ -336,6 +397,7 @@ Page({
     this.completedSets = draft.completedSets || []
     this.restAddCount = Number(draft.restAddCount) || 0
     this.session.restAddCount = this.restAddCount
+    this._restIncludesPlate = !!draft.restIncludesPlate
     const setIndex = draft.setIndex || 0
     const cur = this.currentSet(setIndex) || {
       kg: draft.kg,
@@ -343,6 +405,7 @@ Page({
       kind: 'work'
     }
     const budget = this.setWorkBudget(setIndex)
+    var paused = !!draft.paused
     this.apply({
       phase: draft.phase || 'ready',
       name: copy.moveName(this.displayNameForSet(cur)),
@@ -354,17 +417,90 @@ Page({
       timerText: formatMmSs(budget),
       targetInfo: this.setTargetInfo(cur),
       dots: this.makeDots(setIndex, this.session.setPlan),
-      paused: false,
+      paused: paused,
       showExit: false,
-      showCountdown: false
+      sheetOpen: false,
+      showCountdown: false,
+      countdownPop: false
     })
     if (draft.phase === 'working') {
-      this.beginWorking(draft.workRemainSec != null ? draft.workRemainSec : budget)
+      if (paused) {
+        var remain =
+          draft.workRemainSec != null ? draft.workRemainSec : budget
+        this.beginWorking(remain, { paused: true, budget: draft.workBudgetSec })
+      } else {
+        this.beginWorking(null, {
+          endsAt: Number(draft.workEndsAt) || 0,
+          remainSec: draft.workRemainSec,
+          budget: draft.workBudgetSec,
+          fromBackground: true
+        })
+      }
     }
     if (draft.phase === 'rest') {
       var prev = this.session.setPlan[Math.max(0, setIndex - 1)]
-      this.startRest(draft.restRemainSec || (prev && prev.restSec) || draft.restSec)
+      if (draft.restIncludesPlate == null) {
+        this._restIncludesPlate = plateChangeSec(prev, cur) > 0
+      }
+      this.startRest(null, {
+        endsAt: Number(draft.restEndsAt) || 0,
+        remainSec: draft.restRemainSec,
+        totalSec: draft.restTotalSec,
+        fallbackSec: (prev && prev.restSec) || draft.restSec,
+        fromBackground: true
+      })
     }
+  },
+
+  /** 从后台回到前台：按绝对结束时间续跑 / 已结束则提醒 */
+  resumeAfterForeground() {
+    if (this.data.showCountdown) return
+    var leftBg = !!this._leftForeground
+    this._leftForeground = false
+    if (this.data.phase === 'rest') {
+      this.startRest(null, {
+        endsAt: this.restEndsAt,
+        totalSec: this.restTotalSec,
+        remainSec: this.restRemainSec,
+        fromBackground: leftBg
+      })
+      return
+    }
+    if (this.data.phase === 'working') {
+      if (this.data.paused) {
+        this.persistDraft('已暂停')
+        return
+      }
+      this.beginWorking(null, {
+        endsAt: this.workEndsAt,
+        remainSec: this.workRemainSec,
+        budget: this.workBudgetSec,
+        fromBackground: leftBg
+      })
+    }
+  },
+
+  /** 休息/本组计时结束后的提醒（后台回来时弹窗；前台只震动） */
+  notifyTimerEnded(kind, opts) {
+    opts = opts || {}
+    var endsAt = kind === 'rest' ? this.restEndsAt : this.workEndsAt
+    var key = kind + ':' + String(endsAt || 0)
+    if (this._notifiedTimerKey === key) return
+    this._notifiedTimerKey = key
+    this.vibrateTick()
+    try {
+      wx.vibrateLong({})
+    } catch (e) {}
+    if (!opts.modal) return
+    var title = kind === 'rest' ? '休息时间到了' : '本组时间到了'
+    var content =
+      kind === 'rest' ? '可以接着干下一组了' : '可以点「完成本组」继续'
+    wx.showModal({
+      title: title,
+      content: content,
+      showCancel: false,
+      confirmText: '知道了'
+    })
   },
 
   makeDots(active, plan) {
@@ -382,10 +518,9 @@ Page({
     var list = plan || (this.session && this.session.setPlan) || []
     var total = list.length || Number(this.data.totalSets) || 0
     var cur = Math.min(total, (Number(active) || 0) + 1)
-    var compact = total > 8
     var pct = total > 0 ? Math.round((cur / total) * 100) : 0
     return {
-      dotsCompact: compact,
+      dotsCompact: true,
       progressLabel: total > 0 ? cur + ' / ' + total : '',
       progressPct: pct
     }
@@ -393,6 +528,23 @@ Page({
 
   persistDraft(summary) {
     if (!this.session) return
+    // 离开前按墙上时钟刷新剩余秒，避免草稿落后
+    if (this.data.phase === 'rest' && this.restEndsAt) {
+      this.restRemainSec = Math.max(
+        0,
+        Math.ceil((this.restEndsAt - Date.now()) / 1000)
+      )
+    }
+    if (
+      this.data.phase === 'working' &&
+      !this.data.paused &&
+      this.workEndsAt
+    ) {
+      this.workRemainSec = Math.max(
+        0,
+        Math.ceil((this.workEndsAt - Date.now()) / 1000)
+      )
+    }
     storage.setDraft({
       kind: this.session.kind,
       date: this.session.date,
@@ -411,10 +563,16 @@ Page({
       kg: this.data.kg,
       setIndex: this.data.setIndex,
       phase: this.data.phase,
+      paused: !!this.data.paused,
       completedSets: this.completedSets,
       restAddCount: this.restAddCount || 0,
       restRemainSec: this.restRemainSec,
+      restEndsAt: this.restEndsAt || 0,
+      restTotalSec: this.restTotalSec || 0,
+      restIncludesPlate: !!this._restIncludesPlate,
       workRemainSec: this.workRemainSec,
+      workEndsAt: this.workEndsAt || 0,
+      workBudgetSec: this.workBudgetSec || 0,
       summary:
         summary ||
         this.session.name +
@@ -455,23 +613,32 @@ Page({
     this.runCountdownThenWork()
   },
 
+  bumpCountdownPop(num) {
+    var that = this
+    this.setData({ countdownNum: num, countdownPop: false })
+    setTimeout(function () {
+      that.setData({ countdownPop: true })
+    }, 20)
+  },
+
   runCountdownThenWork() {
     var that = this
     this.clearTimers()
     this.vibrateTick()
-    this.setData({ showCountdown: true, countdownNum: 3 })
+    this.setData({ showCountdown: true })
+    this.bumpCountdownPop(3)
     var n = 3
     this.countdownTimer = setInterval(function () {
       n -= 1
       if (n <= 0) {
         that.clearCountdown()
-        that.setData({ showCountdown: false })
+        that.setData({ showCountdown: false, countdownPop: false })
         that.vibrateTick()
         that.beginWorking()
         return
       }
       that.vibrateTick()
-      that.setData({ countdownNum: n })
+      that.bumpCountdownPop(n)
     }, 1000)
   },
 
@@ -523,7 +690,7 @@ Page({
     this.setData(patch)
     if (leftMs <= 0) {
       this.clearTimers()
-      this.vibrateTick()
+      this.notifyTimerEnded('work', { modal: false })
       this.apply(
         Object.assign(
           { timerText: '0:00', paused: false },
@@ -534,16 +701,34 @@ Page({
     }
   },
 
-  beginWorking(remainSec) {
+  beginWorking(remainSec, opts) {
+    opts = opts || {}
     this.clearTimers()
-    var budget = this.setWorkBudget(this.data.setIndex)
-    var left = remainSec != null ? remainSec : budget
+    if (!opts.endsAt && !opts.fromBackground) this._notifiedTimerKey = ''
+    var budget =
+      opts.budget != null && opts.budget > 0
+        ? Number(opts.budget)
+        : this.setWorkBudget(this.data.setIndex)
+    var left
+    var endsAt = Number(opts.endsAt) || 0
+    if (endsAt > 0 && !opts.paused) {
+      left = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000))
+      this.workEndsAt = endsAt
+    } else if (remainSec != null) {
+      left = remainSec
+    } else if (opts.remainSec != null) {
+      left = Number(opts.remainSec)
+    } else {
+      left = budget
+    }
     if (left < 0) left = 0
     if (left > budget) left = budget
     this.workBudgetSec = budget
     this.minUnlockSec = minWorkUnlockSec(budget)
     this.workRemainSec = left
-    this.workEndsAt = Date.now() + left * 1000
+    if (!(endsAt > 0) || opts.paused) {
+      this.workEndsAt = Date.now() + left * 1000
+    }
     this.setStartedAt = Date.now() - (budget - left) * 1000
     this.activeElapsedBefore = budget - left
     var gate = this.completeGatePatch(this.activeElapsedBefore)
@@ -551,14 +736,27 @@ Page({
       Object.assign(
         {
           phase: 'working',
-          paused: false,
+          paused: !!opts.paused,
           timerText: formatMmSs(left),
+          displayTime: formatMmSs(left),
+          unitHint: opts.paused ? '已暂停' : left <= 0 ? '本组时间到' : '本组剩余',
           showCountdown: false
         },
         gate
       )
     )
-    this.persistDraft('本组倒计时中')
+    this.persistDraft(opts.paused ? '已暂停' : '本组倒计时中')
+    if (opts.paused) return
+    if (left <= 0) {
+      this.apply(
+        Object.assign(
+          { timerText: '0:00', displayTime: '0:00', paused: false },
+          this.completeGatePatch(this.workBudgetSec)
+        )
+      )
+      this.notifyTimerEnded('work', { modal: !!opts.fromBackground })
+      return
+    }
     this.startWorkTicker()
   },
 
@@ -568,6 +766,7 @@ Page({
       var leftMs = Math.max(0, this.workEndsAt - Date.now())
       this.workRemainSec = Math.max(0, Math.ceil(leftMs / 1000))
       this.activeElapsedBefore = this.workElapsedSec()
+      this.clearTimers()
       this.apply(
         Object.assign(
           { paused: true, timerText: formatMmSs(this.workRemainSec) },
@@ -629,18 +828,71 @@ Page({
       dots: this.makeDots(next, this.session.setPlan),
       targetInfo: this.setTargetInfo(nextSet)
     })
-    this.startRest(cur.restSec || nextSet.restSec || this.session.restSec)
+    var baseRest = cur.restSec || nextSet.restSec || this.session.restSec
+    var plateSec = plateChangeSec(cur, nextSet)
+    this._restIncludesPlate = plateSec > 0
+    this.startRest(baseRest + plateSec)
   },
 
-  startRest(sec) {
-    var that = this
+  /**
+   * @param {number|null} sec 新开休息的秒数；恢复时传 null，用 opts.endsAt
+   * @param {object} [opts]
+   */
+  startRest(sec, opts) {
+    opts = opts || {}
     this.clearTimers()
-    this.restTotalSec = sec
-    this.restRemainSec = sec
-    this.restEndsAt = Date.now() + sec * 1000
+    if (sec != null && !opts.fromBackground) this._notifiedTimerKey = ''
+    var endsAt = Number(opts.endsAt) || 0
+    var total
+    var left
+    if (endsAt > 0) {
+      left = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000))
+      total =
+        opts.totalSec != null && opts.totalSec > 0
+          ? Number(opts.totalSec)
+          : Math.max(left, Number(opts.remainSec) || left || 1)
+      this.restEndsAt = endsAt
+    } else if (sec != null) {
+      left = Math.max(0, Number(sec) || 0)
+      total = left
+      this.restEndsAt = Date.now() + left * 1000
+    } else if (opts.remainSec != null) {
+      left = Math.max(0, Number(opts.remainSec) || 0)
+      total =
+        opts.totalSec != null && opts.totalSec > 0
+          ? Number(opts.totalSec)
+          : left
+      this.restEndsAt = Date.now() + left * 1000
+    } else {
+      left = Math.max(0, Number(opts.fallbackSec) || 180)
+      total = left
+      this.restEndsAt = Date.now() + left * 1000
+    }
+    if (total < left) total = left
+    if (total <= 0) total = 1
+    this.restTotalSec = total
+    this.restRemainSec = left
     this._lastRestPaintSec = null
-    this.apply({ restText: formatMmSs(sec), phase: 'rest' })
-    this.persistDraft('组间休息 ' + formatMmSs(sec))
+    var hint = this._restIncludesPlate ? '休息 · 含换片' : '休息一下'
+    if (left <= 0) hint = '休息结束'
+    this.apply({
+      restText: formatMmSs(left),
+      displayTime: formatMmSs(left),
+      phase: 'rest',
+      unitHint: hint
+    })
+    var draftLabel =
+      left <= 0
+        ? '休息结束'
+        : this._restIncludesPlate
+          ? '组间休息（含换片） ' + formatMmSs(left)
+          : '组间休息 ' + formatMmSs(left)
+    this.persistDraft(draftLabel)
+    if (left <= 0) {
+      this.notifyTimerEnded('rest', { modal: !!opts.fromBackground })
+      return
+    }
+    var that = this
     this.restTimer = setInterval(function () {
       that.paintRestTick()
     }, RING_TICK_MS)
@@ -659,22 +911,45 @@ Page({
       this._lastRestPaintSec = sec
       patch.restText = formatMmSs(sec)
       patch.displayTime = formatMmSs(sec)
-      patch.unitHint = '休息一下'
+      patch.unitHint = this._restIncludesPlate ? '休息 · 含换片' : '休息一下'
     }
     this.setData(patch)
-    if (leftMs <= 0) this.clearTimers()
+    if (leftMs <= 0) {
+      this.clearTimers()
+      this.notifyTimerEnded('rest', { modal: false })
+      this.setData({
+        unitHint: '休息结束',
+        restText: '0:00',
+        displayTime: '0:00'
+      })
+      this.persistDraft('休息结束')
+    }
   },
 
   addRest() {
     if (this.data.phase !== 'rest' || this.data.showCountdown) return
-    this.restEndsAt += 20000
-    this.restRemainSec += 20
-    this.restTotalSec += 20
+    // 已结束时 +20 相当于重新开 20s
+    if ((this.restRemainSec || 0) <= 0 && this.restEndsAt <= Date.now()) {
+      this.restEndsAt = Date.now() + 20000
+      this.restRemainSec = 20
+      this.restTotalSec = 20
+    } else {
+      this.restEndsAt += 20000
+      this.restRemainSec += 20
+      this.restTotalSec += 20
+    }
     this.restAddCount = (this.restAddCount || 0) + 1
     if (this.session) this.session.restAddCount = this.restAddCount
     this._lastRestPaintSec = null
-    this.paintRestTick()
+    this._notifiedTimerKey = ''
     this.persistDraft()
+    if (!this.restTimer) {
+      var that = this
+      this.restTimer = setInterval(function () {
+        that.paintRestTick()
+      }, RING_TICK_MS)
+    }
+    this.paintRestTick()
   },
 
   finishSession() {
@@ -683,6 +958,10 @@ Page({
       kind: 'strength',
       restAddCount: this.restAddCount || 0
     })
+    const durationSec = Math.max(
+      0,
+      Math.round((Date.now() - (this.session.startedAt || Date.now())) / 1000)
+    )
     const log = {
       date: this.session.date,
       weekday: this.session.weekday,
@@ -691,18 +970,20 @@ Page({
       sets: this.completedSets,
       accessories: this.session.accessories,
       startedAt: this.session.startedAt,
-      durationSec: Math.max(
-        0,
-        Math.round((Date.now() - (this.session.startedAt || Date.now())) / 1000)
-      ),
-      durationMin: Math.max(
-        0,
-        Math.round((Date.now() - (this.session.startedAt || Date.now())) / 60000)
-      ),
+      durationSec: durationSec,
+      durationMin: Math.max(0, Math.round(durationSec / 60)),
       restAddCount: this.restAddCount || 0,
       score: grade.score,
       title: grade.title,
       finishedAt: Date.now()
+    }
+    const cal = require('../../../services/calories').estimateSessionCalories(
+      log,
+      storage.getProfile()
+    )
+    if (cal.kcal > 0) {
+      log.kcal = cal.kcal
+      log.kcalText = cal.text
     }
     storage.appendLog(log)
     storage.clearDraft()
@@ -710,30 +991,56 @@ Page({
     wx.redirectTo({ url: '/pages/session/summary/summary' })
   },
 
+  clearSheetTimers() {
+    if (this.sheetCloseTimer) {
+      clearTimeout(this.sheetCloseTimer)
+      this.sheetCloseTimer = null
+    }
+    if (this.sheetOpenTimer) {
+      clearTimeout(this.sheetOpenTimer)
+      this.sheetOpenTimer = null
+    }
+  },
+
   openExit() {
+    var that = this
     if (this.data.showCountdown) {
       this.clearCountdown()
-      this.setData({ showCountdown: false })
+      this.setData({ showCountdown: false, countdownPop: false })
     }
-    this.apply({ showExit: true })
+    this.clearSheetTimers()
+    this.apply({ showExit: true, sheetOpen: false })
+    this.sheetOpenTimer = setTimeout(function () {
+      that.apply({ sheetOpen: true })
+      that.sheetOpenTimer = null
+    }, 20)
     if (this.data.phase === 'working' && !this.data.paused) {
       this.togglePause()
     }
   },
 
   closeExit() {
-    this.apply({ showExit: false })
+    var that = this
+    if (!this.data.showExit) return
+    this.clearSheetTimers()
+    this.apply({ sheetOpen: false })
+    this.sheetCloseTimer = setTimeout(function () {
+      that.apply({ showExit: false })
+      that.sheetCloseTimer = null
+    }, 240)
   },
 
   saveExit() {
+    this.clearSheetTimers()
     this.persistDraft('已保存，可继续')
-    this.apply({ showExit: false })
+    this.apply({ showExit: false, sheetOpen: false })
     wx.reLaunch({ url: '/pages/today/today' })
   },
 
   discardExit() {
+    this.clearSheetTimers()
     storage.clearDraft()
-    this.apply({ showExit: false })
+    this.apply({ showExit: false, sheetOpen: false })
     wx.reLaunch({ url: '/pages/today/today' })
   }
 })

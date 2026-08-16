@@ -1,13 +1,27 @@
-<view class="page page-dock">
+<view class="page page-dock" style="padding-top: {{navPadTop}}px;">
   <view class="page-scroll">
     <view class="page-title">建立训练档案</view>
-    <view class="page-sub">1/2 填写身体数据与当前三大项，用于生成处方</view>
+    <view class="page-sub">1/2 先填身体数据和三大项大概重量</view>
 
     <view class="card" style="margin-top: 32rpx;">
       <view class="card-label">性别</view>
       <view class="gender-row">
-        <view class="gender {{gender === 'male' ? 'active' : ''}}" data-v="male" bindtap="setGender">男</view>
-        <view class="gender {{gender === 'female' ? 'active' : ''}}" data-v="female" bindtap="setGender">女</view>
+        <view
+          class="gender {{gender === 'male' ? 'active' : ''}}"
+          hover-class="pressable-hover"
+          hover-start-time="0"
+          hover-stay-time="80"
+          data-v="male"
+          bindtap="setGender"
+        >男</view>
+        <view
+          class="gender {{gender === 'female' ? 'active' : ''}}"
+          hover-class="pressable-hover"
+          hover-start-time="0"
+          hover-stay-time="80"
+          data-v="female"
+          bindtap="setGender"
+        >女</view>
       </view>
     </view>
 
@@ -33,8 +47,8 @@
     </view>
 
     <view class="card">
-      <view class="card-label">当前三大项 1RM（kg）</view>
-      <view class="card-hint">填写预估单次最大重量；后续可按训练表现修正</view>
+      <view class="card-label">三大项大概能扛的最大重量（kg）</view>
+      <view class="card-hint">估个差不多的数就行，后面还能改</view>
       <view class="metric" wx:for="{{lifts}}" wx:key="field">
         <text class="metric-label">{{item.label}}</text>
         <view class="metric-right">
@@ -56,13 +70,16 @@
     </view>
 
     <view class="card">
-      <view class="card-label">辅助项目（可选 1 项）</view>
-      <view class="card-hint">力量举为主线；CrossFit / Hyrox / AthX 择一作调节日，可不选</view>
+      <view class="card-label">要不要加一项练着玩（选 1 项就行）</view>
+      <view class="card-hint">主线还是力量；CrossFit / Hyrox / AthX 选一个做加练日，也可以不选</view>
       <view class="chip-row">
         <view
           wx:for="{{auxItems}}"
           wx:key="id"
           class="chip {{item.active ? 'active' : ''}}"
+          hover-class="pressable-hover"
+          hover-start-time="0"
+          hover-stay-time="80"
           data-id="{{item.id}}"
           bindtap="toggleAux"
         >{{item.label}}</view>
@@ -71,6 +88,12 @@
   </view>
 
   <view class="footer">
-    <button class="btn-primary" bindtap="next">{{ctaLabel || '下一步'}}</button>
+    <button
+      class="btn-primary"
+      hover-class="pressable-hover"
+      hover-start-time="0"
+      hover-stay-time="80"
+      bindtap="next"
+    >{{ctaLabel || '下一步'}}</button>
   </view>
 </view>

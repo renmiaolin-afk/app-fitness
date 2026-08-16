@@ -2,6 +2,8 @@ const storage = require('../../../utils/storage')
 const disclaimer = require('../../../services/disclaimer')
 
 Page({
+  behaviors: [require('../../../behaviors/immersive-nav')],
+
   data: {
     title: disclaimer.DISCLAIMER_TITLE,
     version: disclaimer.DISCLAIMER_VERSION,
@@ -48,11 +50,11 @@ Page({
     if (wx.exitMiniProgram) {
       wx.exitMiniProgram({
         fail: function () {
-          wx.showToast({ title: '请从右上角关闭小程序', icon: 'none' })
+          wx.showToast({ title: '请从右上角关掉小程序', icon: 'none' })
         }
       })
     } else {
-      wx.showToast({ title: '请从右上角关闭小程序', icon: 'none' })
+      wx.showToast({ title: '请从右上角关掉小程序', icon: 'none' })
     }
   }
 })

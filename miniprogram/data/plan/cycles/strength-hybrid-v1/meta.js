@@ -1,9 +1,9 @@
 module.exports = {
   "id": "strength-hybrid-v1",
   "name": "力量举周期",
-  "planId": "strength-hybrid-mix",
+  "planId": "strength-frequent",
   "goal": "三大项总和",
-  "principle": "四套独立力量举：挪威 / 线性5×5 / 5/3/1 / 四天力量；每周固定肩背日（实力推+引体/背辅）。辅助（CF/Hyrox/AthX）单选嵌入调节日。",
+  "principle": "四套独立力量举：高频力训 / 基础力训 / 精简力训 / 分化力训；每周固定肩背日（实力推+引体/背辅）。辅助（CF/Hyrox/AthX）单选嵌入调节日。",
   "weeks": 4,
   "optionalTestWeek": 5,
   "scheduling": {

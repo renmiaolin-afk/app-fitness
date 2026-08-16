@@ -40,7 +40,7 @@ Component({
 
     onVideoError() {
       wx.showToast({
-        title: '视频暂不可播，先看要点',
+        title: '视频暂时播不了，先看要点吧',
         icon: 'none'
       })
     }

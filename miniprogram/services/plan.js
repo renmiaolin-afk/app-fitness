@@ -7,7 +7,8 @@ const cfWeeks = require('./cf-weeks')
 const { estimateBlockGain } = require('./progress-target')
 const { inferStrengthTier } = require('./strength-level')
 const copy = require('../utils/copy')
-const { roundToStep, weekdayIndex, WEEKDAY_LABELS } = require('../utils/format')
+const { roundToStep } = require('../utils/format')
+const cycleDay = require('../utils/cycle-day')
 
 const CF_KIND_LABEL = {
   skill: '力量',
@@ -40,30 +41,43 @@ const AUX_SESSIONS = {
 
 /** 文案：练什么 + 练完会怎样（展示用） */
 const PLAN_COPY = {
-  'strength-hybrid-mix': {
-    problem: '练什么：挪威波浪（4×4→2×2→1×8）高频蹲推拉，另加肩背日与轻拉日。',
-    goal: '练完会怎样：恢复跟得上时，三大项上涨通常最快。'
+  'strength-frequent': {
+    problem: '怎么练：深蹲、卧推、硬拉练得更密，再加肩背和轻拉（低强度技术组）。',
+    goal: '适合你：恢复跟得上时，三大项通常涨得最快。'
   },
-  'strength-linear': {
-    problem: '练什么：深蹲/卧推 5×5、硬拉 1×5，外加一天肩背（实力推+引体）。',
-    goal: '练完会怎样：适合打基础，每周能稳定看到重量往上走。'
+  'strength-basic': {
+    problem: '怎么练：深蹲和卧推 5×5，硬拉 1×5，再加一天肩背；加重周内完成就加重。',
+    goal: '适合你：结构简单好执行，适合把底子打稳。'
   },
-  'strength-time-efficient': {
-    problem: '练什么：5/3/1 顶组为主，三力各一天 + 肩背日，单次更短。',
-    goal: '练完会怎样：时间紧也能长期坚持，力量缓慢但持续上涨。'
+  'strength-lean': {
+    problem: '怎么练：三大项各一天做顶组（5/3/1），再加一天肩背，单次约 30 分钟。',
+    goal: '适合你：时间紧也能长期练，力量慢慢往上爬。'
   },
-  'strength-build': {
-    problem: '练什么：蹲、卧推、硬拉、肩背四天拆开练，组数容量更足。',
-    goal: '练完会怎样：三大项继续涨，同时肩背腿围度更饱满、看着更厚。'
+  'strength-split': {
+    problem: '怎么练：蹲、卧、拉、肩背各一天，主项外再加 2–3 个辅助，容量更高。',
+    goal: '适合你：力量继续涨，肩背和腿也会练得更厚实。'
   }
 }
 
 const PLAN_ORDER = [
-  'strength-hybrid-mix',
-  'strength-linear',
-  'strength-time-efficient',
-  'strength-build'
+  'strength-frequent',
+  'strength-basic',
+  'strength-lean',
+  'strength-split'
 ]
+
+/** 旧 planId → 新 id（档案兼容） */
+const PLAN_ID_LEGACY = {
+  'strength-hybrid-mix': 'strength-frequent',
+  'strength-linear': 'strength-basic',
+  'strength-time-efficient': 'strength-lean',
+  'strength-build': 'strength-split'
+}
+
+function normalizePlanId(planId) {
+  var id = planId || 'strength-frequent'
+  return PLAN_ID_LEGACY[id] || id
+}
 
 const AUX_ALLOWED = { crossfit: 1, hyrox: 1, athx: 1 }
 
@@ -96,6 +110,7 @@ const PLAN_OPTIONS = PLAN_ORDER.map(function (id) {
 })
 
 function planDisplayName(planId) {
+  planId = normalizePlanId(planId)
   for (var i = 0; i < PLAN_OPTIONS.length; i++) {
     if (PLAN_OPTIONS[i].id === planId) return PLAN_OPTIONS[i].name
   }
@@ -115,12 +130,52 @@ function normalizeWeekSlots(rawSlots) {
       type: s.type,
       key: s.key,
       label: s.label,
-      dayLabel: WEEKDAY_LABELS[i],
+      dayLabel: cycleDay.WEEKDAY_LABELS[i],
       index: i
     }
     if (s.session) out.session = s.session
     return out
   })
+}
+
+function emptyCalendarSlot(calWd, date) {
+  return {
+    weekday: 0,
+    calendarWeekday: calWd,
+    date: date,
+    dayLabel: cycleDay.dayLabelForDate(date),
+    type: 'empty',
+    key: 'empty',
+    label: '',
+    index: -1,
+    empty: true
+  }
+}
+
+/**
+ * 自然周 Mon–Sun：建档日前空槽，之后按建档日 = 计划第 1 天顺延。
+ */
+function mapCalendarWeekSlots(profile, planSlots, weekMonday) {
+  var start = cycleDay.cycleStartKey(profile)
+  var out = []
+  for (var calWd = 1; calWd <= 7; calWd++) {
+    var date = cycleDay.dateForCalendarWeekday(weekMonday, calWd)
+    if (date < start) {
+      out.push(emptyCalendarSlot(calWd, date))
+      continue
+    }
+    var idx = cycleDay.cycleDayIndex(profile, date)
+    var s = (planSlots && planSlots[idx]) || {}
+    out.push(
+      Object.assign({}, s, {
+        calendarWeekday: calWd,
+        date: date,
+        dayLabel: cycleDay.dayLabelForDate(date),
+        empty: false
+      })
+    )
+  }
+  return out
 }
 
 function serializeWeekSlots(slots) {
@@ -137,7 +192,8 @@ function serializeWeekSlots(slots) {
 }
 
 function getWeekSlots(planId, auxiliariesList, overrideSlots) {
-  const plan = weekSlots.plans[planId] || weekSlots.plans['strength-hybrid-mix']
+  planId = normalizePlanId(planId)
+  const plan = weekSlots.plans[planId] || weekSlots.plans['strength-frequent']
   const key = auxKey(normalizeAuxiliaries(auxiliariesList))
   var slots = (plan.combinations && plan.combinations[key]) || plan.combinations.none
   if (overrideSlots && overrideSlots.length === 7) {
@@ -148,12 +204,13 @@ function getWeekSlots(planId, auxiliariesList, overrideSlots) {
 
 /** 读取 profile 上的周日程自定义（与当前 planId 匹配时生效） */
 function resolveWeekSlots(profile, planId) {
-  var pid = planId || (profile && profile.planId) || 'strength-hybrid-mix'
+  var pid = normalizePlanId(planId || (profile && profile.planId) || 'strength-frequent')
   var aux = (profile && profile.auxiliaries) || []
   var ov = profile && profile.weekSlotsOverride
+  var ovPid = ov && normalizePlanId(ov.planId)
   var useOv =
     ov &&
-    ov.planId === pid &&
+    ovPid === pid &&
     Array.isArray(ov.slots) &&
     ov.slots.length === 7
   return getWeekSlots(pid, aux, useOv ? ov.slots : null)
@@ -345,7 +402,7 @@ function lightenAccessory(item) {
 }
 
 /**
- * 挪威力训：辅项最多 2 个，且偏轻量恢复向
+ * 高频力训：辅项最多 2 个，且偏轻量恢复向
  */
 function trimNorwegianAccessories(list, slotKey) {
   var picked = []
@@ -393,31 +450,31 @@ function trimNorwegianAccessories(list, slotKey) {
 function resolveMainScheme(planId, slotKey) {
   // 肩背日：各计划统一走 OHP 处方，不用挪威/531/5×5 主项波浪
   if (slotKey === 'ohp') return 'ohp'
-  if (planId === 'strength-time-efficient') return '531'
-  if (planId === 'strength-linear' || planId === 'strength-build') return 'linear5x5'
+  if (planId === 'strength-lean') return '531'
+  if (planId === 'strength-basic' || planId === 'strength-split') return 'linear5x5'
   if (slotKey === 'deadlift_light') return 'light'
   if (slotKey === 'squat_vol') return 'volume'
   return 'norwegian'
 }
 
 function accessoryNoteForScheme(scheme) {
-  if (scheme === 'ohp') return '肩背日：主项实力推，辅项补背部与肩袖'
-  if (scheme === '531') return '5/3/1 主课后辅项从简，最多 2 个轻量动作'
-  if (scheme === 'linear5x5') return '5×5 主课后辅项从简，最多 2 个轻量动作'
-  return '挪威主课后辅项从简，最多 2 个轻量动作'
+  if (scheme === 'ohp') return '肩背日：先练实力推，再补背部和肩袖'
+  if (scheme === '531') return '顶组练完后，后面只留最多 2 个轻松动作'
+  if (scheme === 'linear5x5') return '5×5 练完后，后面只留最多 2 个轻松动作'
+  return '挪威主课练完后，后面只留最多 2 个轻松动作'
 }
 
 function getStrengthDay(profile, slot) {
   const tier = (profile && profile.strengthTier) || 'advanced'
   const week = (profile && profile.currentWeek) || 1
-  const planId = (profile && profile.planId) || 'strength-hybrid-mix'
+  const planId = normalizePlanId((profile && profile.planId) || 'strength-frequent')
   const file = getStrengthFile(tier, week)
   const dayKey = KEY_TO_STRENGTH_DAY[slot.key]
   const raw = (file.days && file.days[dayKey]) || null
   if (!raw) return null
-  // 仅挪威计划使用二次深蹲 / 轻拉变体处方
+  // 仅高频力训（挪威波浪）使用二次深蹲 / 轻拉变体处方
   const day =
-    planId === 'strength-hybrid-mix' ? applyNorwegianVariant(raw, slot.key) : raw
+    planId === 'strength-frequent' ? applyNorwegianVariant(raw, slot.key) : raw
   const scheme = resolveMainScheme(planId, slot.key)
   const main = day.main
     ? Object.assign({}, day.main, {
@@ -577,7 +634,7 @@ function structureCfSession(rawBlocks, meta) {
   return {
     name: name,
     durationMin: (meta && meta.durationMin) || 0,
-    note: (meta && (meta.intensityNote || meta.note)) || '主项杠铃力量，辅项 WOD；控强度，别抢力量日恢复',
+    note: (meta && (meta.intensityNote || meta.note)) || '先练杠铃力量，再做 WOD；别练太狠，别抢力量日的恢复',
     closed: closed,
     main: main,
     accessories: accessories,
@@ -676,7 +733,7 @@ function getCfSession(profile, slots, slotIndex) {
   return attachCfLoadKg(
     structureCfSession(raw.blocks, {
       durationMin: raw.durationMin || 0,
-      intensityNote: raw.intensityNote || '主项杠铃力量，辅项 WOD；控强度，别抢力量日恢复',
+      intensityNote: raw.intensityNote || '先练杠铃力量，再做 WOD；别练太狠，别抢力量日的恢复',
       title: raw.title
     }),
     profile
@@ -806,18 +863,28 @@ function getAuxSession(slot, profile, slots, slotIndex) {
 }
 
 function buildTodayView(profile, selectedWeekday) {
-  const planId = (profile && profile.planId) || 'strength-hybrid-mix'
-  const slots = resolveWeekSlots(profile, planId)
-  const todayIdx = weekdayIndex() - 1
-  const sel = selectedWeekday != null ? selectedWeekday : todayIdx
-  const slot = slots[sel]
+  const planId = normalizePlanId((profile && profile.planId) || 'strength-frequent')
+  const planSlots = resolveWeekSlots(profile, planId)
+  const today = cycleDay.todayKey()
+  const weekMonday = cycleDay.mondayKey(today)
+  const todayIdx = cycleDay.weekdayOf(today) - 1
+  const datedSlots = mapCalendarWeekSlots(profile, planSlots, weekMonday)
+  var sel = selectedWeekday != null ? selectedWeekday : todayIdx
+  if (!datedSlots[sel] || datedSlots[sel].empty) sel = todayIdx
+  const slot = datedSlots[sel] || datedSlots[todayIdx] || emptyCalendarSlot(todayIdx + 1, today)
   const isToday = sel === todayIdx
   const planMeta = PLAN_OPTIONS.find(function (p) {
     return p.id === planId
   }) || PLAN_OPTIONS[0]
 
   let detail = null
-  if (slot.type === 'strength') {
+  if (slot.empty || slot.type === 'empty') {
+    detail = {
+      type: 'empty',
+      theme: '无',
+      note: ''
+    }
+  } else if (slot.type === 'strength') {
     detail = getStrengthDay(profile, slot)
   } else if (slot.type === 'rest') {
     detail = {
@@ -826,7 +893,7 @@ function buildTodayView(profile, selectedWeekday) {
       note: '不安排力量与高强度辅助；完成 Zone2 步行 20–30 分钟 + 髋踝活动度'
     }
   } else {
-    detail = getAuxSession(slot, profile, slots, sel)
+    detail = getAuxSession(slot, profile, planSlots, slot.index)
   }
 
   return {
@@ -835,12 +902,13 @@ function buildTodayView(profile, selectedWeekday) {
     planName: planMeta.name,
     week: (profile && profile.currentWeek) || 1,
     phase: cycleMeta.phases[String((profile && profile.currentWeek) || 1)] || '',
-    slots: slots,
+    slots: datedSlots,
     selectedIndex: sel,
     isToday: isToday,
     slot: slot,
     detail: detail,
-    isPreview: !isToday
+    isPreview: !isToday,
+    weekStart: weekMonday
   }
 }
 
@@ -905,7 +973,7 @@ function slotSummary(slot, profile, week, slots, slotIndex) {
     return {
       kind: 'aux',
       title: slot.label || '调节',
-      detail: '调节课',
+      detail: '加练',
       mainName: slot.label || '调节',
       mainSets: '',
       accessories: [],
@@ -939,7 +1007,7 @@ function slotSummary(slot, profile, week, slots, slotIndex) {
       setsText: b.minutes ? b.minutes + ' 分钟' : b.detail || ''
     }
   })
-  var auxDetail = session.note || '调节课'
+  var auxDetail = session.note || '加练'
   if (blocks.length) {
     auxDetail = blocks
       .map(function (b) {
@@ -962,34 +1030,70 @@ function slotSummary(slot, profile, week, slots, slotIndex) {
 }
 
 function buildCycleOverview(profile) {
-  const planId = (profile && profile.planId) || 'strength-hybrid-mix'
-  const slots = resolveWeekSlots(profile, planId)
+  const planId = normalizePlanId((profile && profile.planId) || 'strength-frequent')
+  const planSlots = resolveWeekSlots(profile, planId)
   const currentWeek = (profile && profile.currentWeek) || 1
   const planMeta = PLAN_OPTIONS.find(function (p) {
     return p.id === planId
   }) || PLAN_OPTIONS[0]
   const totalWeeks = (cycleMeta.optionalTestWeek || cycleMeta.weeks || 5)
+  const start = cycleDay.cycleStartKey(profile)
+  const firstMonday = cycleDay.mondayKey(start)
+  const lastDate = cycleDay.addDaysKey(start, totalWeeks * 7 - 1)
+  const lastMonday = cycleDay.mondayKey(lastDate)
+  const calendarWeeks =
+    Math.floor(cycleDay.daysBetweenKeys(firstMonday, lastMonday) / 7) + 1
+  const todayMonday = cycleDay.mondayKey(cycleDay.todayKey())
   const weeks = []
-  for (let w = 1; w <= totalWeeks; w++) {
-    const days = slots.map(function (slot, i) {
-      const summary = slotSummary(slot, profile, w, slots, i)
+  for (let w = 1; w <= calendarWeeks; w++) {
+    const weekMonday = cycleDay.addDaysKey(firstMonday, (w - 1) * 7)
+    const dated = mapCalendarWeekSlots(profile, planSlots, weekMonday)
+    const days = dated.map(function (slot) {
+      if (slot.empty) {
+        return {
+          dayLabel: slot.dayLabel,
+          weekday: 0,
+          date: slot.date,
+          kind: 'empty',
+          empty: true,
+          title: '无',
+          detail: '',
+          mainName: '无',
+          mainSets: '',
+          accessories: [],
+          layout: '',
+          closed: true,
+          slotIndex: -1
+        }
+      }
+      const progWeek = Math.min(
+        totalWeeks,
+        cycleDay.programWeekOf(profile, slot.date)
+      )
+      const summary = slotSummary(slot, profile, progWeek, planSlots, slot.index)
       return {
-        dayLabel: WEEKDAY_LABELS[i],
+        dayLabel: slot.dayLabel,
         weekday: slot.weekday,
+        date: slot.date,
         kind: summary.kind,
+        empty: false,
         title: summary.title,
         detail: summary.detail,
         mainName: summary.mainName || summary.title,
         mainSets: summary.mainSets || summary.detail || '',
         accessories: summary.accessories || [],
         layout: summary.layout || '',
-        closed: !!summary.closed
+        closed: !!summary.closed,
+        slotIndex: slot.index,
+        programWeek: progWeek
       }
     })
+    const phaseDate = weekMonday < start ? start : weekMonday
+    const phaseWeek = Math.min(totalWeeks, cycleDay.programWeekOf(profile, phaseDate))
     weeks.push({
       week: w,
-      phase: cycleMeta.phases[String(w)] || '',
-      current: w === currentWeek,
+      phase: cycleMeta.phases[String(phaseWeek)] || '',
+      current: weekMonday === todayMonday,
       days: days
     })
   }
@@ -1014,6 +1118,7 @@ module.exports = {
   cycleMeta: cycleMeta,
   PLAN_OPTIONS: PLAN_OPTIONS,
   planDisplayName: planDisplayName,
+  normalizePlanId: normalizePlanId,
   normalizeAuxiliaries: normalizeAuxiliaries,
   auxKey: auxKey,
   inferStrengthTier: inferStrengthTier,

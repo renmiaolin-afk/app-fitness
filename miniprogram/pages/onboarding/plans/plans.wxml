@@ -1,36 +1,58 @@
-<view class="page page-dock">
-  <view class="page-scroll">
+<view class="page page-dock" style="padding-top: {{navPadTop}}px;">
+  <view class="page-scroll {{isDragging ? 'dragging' : ''}}">
     <view class="page-title">推荐训练计划</view>
 
     <view class="analyzing" wx:if="{{analyzing}}">
       <view class="analyzing-dot"></view>
-      <text class="analyzing-text">正在匹配计划…</text>
+      <text class="analyzing-text">正在帮你挑计划…</text>
     </view>
 
-    <view class="plan-stack" wx:else>
+    <view class="plan-stack stagger-root {{listEntered ? 'entered' : ''}} {{listSettled ? 'settled' : ''}}" wx:else>
+      <view class="start-row stagger-item stagger-d0">
+        <view
+          class="chip chip-equal {{startWhen === 'today' ? 'active' : ''}}"
+          hover-class="pressable-hover"
+          hover-start-time="0"
+          hover-stay-time="80"
+          data-when="today"
+          catchtap="selectStart"
+        >今天开始</view>
+        <view
+          class="chip chip-equal {{startWhen === 'tomorrow' ? 'active' : ''}}"
+          hover-class="pressable-hover"
+          hover-start-time="0"
+          hover-stay-time="80"
+          data-when="tomorrow"
+          catchtap="selectStart"
+        >明天开始</view>
+      </view>
       <view class="drag-hint">{{dragHint}}</view>
       <view
         wx:for="{{plans}}"
         wx:key="id"
-        class="hero-card tone-{{index}} {{item.selected ? 'selected' : ''}}"
+        class="hero-card tone-{{index}} {{item.selected ? 'selected' : ''}} stagger-item"
+        hover-class="pressable-hover"
+        hover-start-time="0"
+        hover-stay-time="80"
         data-id="{{item.id}}"
         bindtap="select"
       >
         <view class="hero-name">{{item.name}}</view>
-        <view class="hero-intro" wx:if="{{item.intro}}"><text>{{item.intro}}</text></view>
-        <view
-          class="week-row week-row-{{item.id}}"
-          wx:if="{{item.weekCells.length}}"
-          bindtouchmove="onWeekTouchMove"
-          bindtouchend="onWeekTouchEnd"
-          bindtouchcancel="onWeekTouchEnd"
-          catchtouchmove="{{isDragging ? 'noop' : ''}}"
-        >
+        <view class="hero-result" wx:if="{{item.result}}">{{item.result}}</view>
+        <view class="hero-blurb" wx:if="{{item.blurb}}">{{item.blurb}}</view>
+        <view class="week-block" wx:if="{{item.weekCells.length}}">
+          <view class="week-caption">每 7 天</view>
+          <view
+            class="week-row week-row-{{item.id}}"
+            catchtouchmove="onWeekTouchMove"
+            catchtouchend="onWeekTouchEnd"
+            catchtouchcancel="onWeekTouchEnd"
+          >
           <view
             wx:for="{{item.weekCells}}"
             wx:for-item="cell"
             wx:for-index="cellIndex"
-            wx:key="day"
+            wx:key="date"
             class="week-cell week-cell-{{item.id}} {{cell.rest ? 'rest' : 'train'}} {{cell.dragging ? 'dragging' : ''}} {{cell.dragOver ? 'drag-over' : ''}}"
             data-plan-id="{{item.id}}"
             data-index="{{cellIndex}}"
@@ -39,12 +61,19 @@
             <text class="wd">{{cell.day}}</text>
             <text class="wl">{{cell.label}}</text>
           </view>
+          </view>
         </view>
       </view>
     </view>
   </view>
 
   <view class="footer" wx:if="{{!analyzing}}">
-    <button class="btn-primary" bindtap="confirm">使用此计划，进入今日</button>
+    <button
+      class="btn-primary"
+      hover-class="pressable-hover"
+      hover-start-time="0"
+      hover-stay-time="80"
+      bindtap="confirm"
+    >{{confirmLabel}}</button>
   </view>
 </view>

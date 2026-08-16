@@ -11,13 +11,22 @@
     enable-flex="{{true}}"
     style="background: transparent;"
   >
-    <view class="header">
+    <view class="stagger-root {{motionEntered ? 'entered' : ''}} {{motionSettled ? 'settled' : ''}}">
+    <view class="header stagger-item stagger-d0">
       <view class="header-text">
         <view class="page-title">{{cycleName}}</view>
         <view class="page-sub">{{weekLine}}</view>
         <view class="page-sub" wx:if="{{weekHint}}">{{weekHint}}</view>
       </view>
-      <view class="avatar {{avatarUrl ? 'has-photo' : ''}}" bindtap="goMe" aria-role="button" aria-label="个人中心">
+      <view
+        class="avatar {{avatarUrl ? 'has-photo' : ''}}"
+        hover-class="pressable-hover"
+        hover-start-time="0"
+        hover-stay-time="80"
+        bindtap="goMe"
+        aria-role="button"
+        aria-label="个人中心"
+      >
         <image
           class="avatar-img {{avatarUrl ? 'filled' : 'placeholder'}}"
           src="{{avatarUrl || '/assets/icon-me.png'}}"
@@ -26,29 +35,39 @@
       </view>
     </view>
 
-    <view class="week-tabs">
+    <view class="week-tabs stagger-item stagger-d1">
       <view
         wx:for="{{ui.slots}}"
-        wx:key="weekday"
-        class="tab {{item.active ? 'active' : ''}} {{item.left ? 'left' : ''}} {{item.missed ? 'missed' : ''}} {{item.done ? 'done' : ''}}"
+        wx:key="calendarWeekday"
+        class="tab {{item.active ? 'active' : ''}} {{item.empty ? 'empty' : ''}} {{item.left ? 'left' : ''}} {{item.missed ? 'missed' : ''}} {{item.done ? 'done' : ''}}"
+        hover-class="{{item.empty ? '' : 'pressable-hover'}}"
+        hover-start-time="0"
+        hover-stay-time="80"
         data-index="{{index}}"
         bindtap="selectDay"
+        aria-disabled="{{item.empty}}"
       >
-        <view class="tab-pill" aria-hidden="true"></view>
         <view class="tab-group">
-          <text class="d">{{item.dayLabel}}</text>
-          <text class="l">{{item.label}}</text>
+          <view class="tab-mark" aria-hidden="true"></view>
+          <view class="tab-copy">
+            <text class="d">{{item.dayLabel}}</text>
+            <text class="l">{{item.label}}</text>
+          </view>
         </view>
       </view>
     </view>
 
+    <view class="stagger-item stagger-d2">
     <view class="body-adjust" wx:if="{{ui.showBodyAdjust}}">
-      <view class="body-adjust-label">今日状态</view>
+      <view class="body-adjust-label">今天感觉怎么样</view>
       <view class="chip-row">
         <view
           wx:for="{{bodyOptions}}"
           wx:key="id"
           class="chip chip-equal {{body === item.id ? 'active' : ''}}"
+          hover-class="pressable-hover"
+          hover-start-time="0"
+          hover-stay-time="80"
           data-id="{{item.id}}"
           bindtap="pickBody"
         >{{item.label}}</view>
@@ -82,7 +101,7 @@
               catchtap="toggleDuration"
               aria-role="button"
             >
-              <text class="quality-hero-dur-label">训练总时长</text>
+              <text class="quality-hero-dur-label">一共练了多久</text>
               <view class="quality-hero-dur-right">
                 <text class="quality-hero-dur-time">{{ui.durationText}}</text>
                 <view class="quality-hero-dur-toggle">
@@ -101,13 +120,24 @@
                   <text class="quality-hero-breakdown-time">{{item.timeText}}</text>
                 </view>
               </block>
-              <text class="quality-hero-breakdown-empty" wx:else>暂无分项用时记录</text>
+              <text class="quality-hero-breakdown-empty" wx:else>还没有分段用时</text>
             </view>
           </view>
+          <view class="quality-hero-cal" wx:if="{{ui.showCalories}}">
+            <text class="quality-hero-cal-label">大约消耗</text>
+            <text class="quality-hero-cal-val">{{ui.calorieText}}</text>
+          </view>
+          <text class="quality-hero-cal-note" wx:if="{{ui.showCalories && ui.calorieNote}}">{{ui.calorieNote}}</text>
           <text class="quality-hero-note" wx:if="{{ui.qualityNote}}">{{ui.qualityNote}}</text>
         </view>
 
-        <block wx:if="{{ui.showSetCards}}">
+        <block wx:if="{{ui.isEmpty}}">
+          <view class="main-left">
+            <text class="main-name empty-label">无</text>
+          </view>
+        </block>
+
+        <block wx:elif="{{ui.showSetCards}}">
           <view class="sec-head">
             <text class="sec-label">{{ui.secMainLabel}}</text>
           </view>
@@ -163,23 +193,25 @@
             <text class="sec-label">休息日</text>
           </view>
           <view class="main-left">
-            <text class="main-name">主动恢复</text>
+            <text class="main-name">轻松恢复</text>
           </view>
           <view class="acc-label sec-gap">{{ui.restNote}}</view>
         </block>
 
         <block wx:else>
           <view class="sec-head">
-            <text class="sec-label">{{ui.auxName || '调节'}}</text>
+            <text class="sec-label">{{ui.auxName || '加练'}}</text>
             <text class="status-chip" wx:if="{{ui.showStatus}}">{{ui.statusChip}}</text>
           </view>
           <view class="acc-label">{{ui.auxNote}}</view>
         </block>
       </view>
     </view>
+    </view>
+    </view>
   </scroll-view>
 
-  <view class="footer" wx:if="{{ui.showLeaveActions || ui.showStart || ui.showRestActions || (!viewIsToday && !ui.isMissed && !ui.isLeave && !ui.isCompleted)}}">
+  <view class="footer" wx:if="{{!ui.isEmpty && (ui.showLeaveActions || ui.showStart || ui.showRestActions || (!viewIsToday && !ui.isMissed && !ui.isLeave && !ui.isCompleted))}}">
     <block wx:if="{{ui.showLeaveActions}}">
       <view class="btn-link" bindtap="revokeLeave">撤销请假</view>
     </block>
@@ -188,16 +220,42 @@
     </block>
     <block wx:elif="{{ui.showStart}}">
       <view class="footer-row" wx:if="{{ui.showLeaveLink}}">
-        <button class="btn-secondary footer-btn-side" bindtap="markLeave">今天请假</button>
-        <button class="btn-primary footer-btn-main" bindtap="start">{{ui.ctaText}}</button>
+        <button
+          class="btn-secondary footer-btn-side"
+          hover-class="pressable-hover"
+          hover-start-time="0"
+          hover-stay-time="80"
+          bindtap="markLeave"
+          aria-label="今天请假"
+        >😴</button>
+        <button
+          class="btn-primary footer-btn-main"
+          hover-class="pressable-hover"
+          hover-start-time="0"
+          hover-stay-time="80"
+          bindtap="start"
+        >{{ui.ctaText}}</button>
       </view>
-      <button class="btn-primary" wx:else bindtap="start">{{ui.ctaText}}</button>
+      <button
+        class="btn-primary"
+        wx:else
+        hover-class="pressable-hover"
+        hover-start-time="0"
+        hover-stay-time="80"
+        bindtap="start"
+      >{{ui.ctaText}}</button>
     </block>
     <block wx:elif="{{ui.showRestActions}}">
-      <button class="btn-outline" bindtap="goCycle">查看本周安排</button>
+      <button
+        class="btn-outline"
+        hover-class="pressable-hover"
+        hover-start-time="0"
+        hover-stay-time="80"
+        bindtap="goCycle"
+        >看看这周安排</button>
     </block>
     <block wx:else>
-      <view class="btn-link">只能练今天的课，过去的不能补</view>
+      <view class="btn-link">只能练今天的课，过去的补不了</view>
     </block>
   </view>
 </view>

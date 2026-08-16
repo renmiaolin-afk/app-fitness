@@ -1,7 +1,7 @@
-<view class="page page-dock">
+<view class="page page-dock" style="padding-top: {{navPadTop}}px;">
   <view class="page-scroll">
     <view class="page-title">训练习惯</view>
-    <view class="page-sub">{{fromMe ? '修改后立即生效，不影响当前周期' : '2/2 用于匹配计划剂量与恢复安排'}}</view>
+    <view class="page-sub">{{fromMe ? '改完马上生效，不影响这周进度' : '2/2 告诉我们你怎么练，好帮你挑计划'}}</view>
 
     <view class="card" style="margin-top: 32rpx;">
       <view class="card-label">这阶段你想怎么练？</view>
@@ -11,6 +11,9 @@
           wx:for="{{effortOptions}}"
           wx:key="id"
           class="chip chip-equal {{effort === item.id ? 'active' : ''}}"
+          hover-class="pressable-hover"
+          hover-start-time="0"
+          hover-stay-time="80"
           data-field="effort"
           data-id="{{item.id}}"
           bindtap="pick"
@@ -26,6 +29,9 @@
           wx:for="{{sleepOptions}}"
           wx:key="id"
           class="chip chip-equal {{sleep === item.id ? 'active' : ''}}"
+          hover-class="pressable-hover"
+          hover-start-time="0"
+          hover-stay-time="80"
           data-field="sleep"
           data-id="{{item.id}}"
           bindtap="pick"
@@ -34,12 +40,15 @@
     </view>
 
     <view class="card">
-      <view class="card-label">有没有需要长期注意的不适？</view>
+      <view class="card-label">身体有没有要长期留意的？</view>
       <view class="chip-row">
         <view
           wx:for="{{bodyOptions}}"
           wx:key="id"
           class="chip chip-equal {{body === item.id ? 'active' : ''}}"
+          hover-class="pressable-hover"
+          hover-start-time="0"
+          hover-stay-time="80"
           data-field="body"
           data-id="{{item.id}}"
           bindtap="pick"
@@ -48,12 +57,15 @@
     </view>
 
     <view class="card">
-      <view class="card-label">单次通常能练多久？</view>
+      <view class="card-label">一次大概能练多久？</view>
       <view class="chip-row">
         <view
           wx:for="{{durationOptions}}"
           wx:key="id"
           class="chip chip-equal {{duration === item.id ? 'active' : ''}}"
+          hover-class="pressable-hover"
+          hover-start-time="0"
+          hover-stay-time="80"
           data-field="duration"
           data-id="{{item.id}}"
           bindtap="pick"
@@ -63,6 +75,12 @@
   </view>
 
   <view class="footer">
-    <button class="btn-primary" bindtap="next">{{ctaLabel}}</button>
+    <button
+      class="btn-primary"
+      hover-class="pressable-hover"
+      hover-start-time="0"
+      hover-stay-time="80"
+      bindtap="next"
+    >{{ctaLabel}}</button>
   </view>
 </view>

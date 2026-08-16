@@ -42,6 +42,7 @@ Page({
     subText: '',
     loadText: '',
     showExit: false,
+    sheetOpen: false,
     dots: [],
     dotsCompact: false,
     progressLabel: '',
@@ -74,7 +75,7 @@ Page({
     if (query.resume === '1') {
       const draft = storage.getDraft()
       if (!draft || draft.kind !== 'aux') {
-        wx.showToast({ title: '没有可恢复的辅助课', icon: 'none' })
+        wx.showToast({ title: '没有能接着练的加练课', icon: 'none' })
         return
       }
       this.boot(draft.blocks, draft.segmentIndex || 0, draft, !!draft.isCfSets)
@@ -88,14 +89,14 @@ Page({
       view.slot && view.slot.weekday
     )
     if (quality.isCompletedLog(dayLog0)) {
-      wx.showToast({ title: '今天已练完', icon: 'none' })
+      wx.showToast({ title: '今天已经练完了', icon: 'none' })
       setTimeout(function () {
         wx.navigateBack()
       }, 400)
       return
     }
     if (dayLog0 && dayLog0.kind === 'leave') {
-      wx.showToast({ title: '今天已请假', icon: 'none' })
+      wx.showToast({ title: '今天已经请过假了', icon: 'none' })
       setTimeout(function () {
         wx.navigateBack()
       }, 400)
@@ -103,12 +104,12 @@ Page({
     }
     const session = view.detail && view.detail.session
     if (!session) {
-      wx.showToast({ title: '今日不是辅助日', icon: 'none' })
+      wx.showToast({ title: '今天不是加练日', icon: 'none' })
       return
     }
     const blocks = resolveExecBlocks(session, profile)
     if (session.closed || !blocks.length) {
-      wx.showToast({ title: session.note || '本周无此辅助课', icon: 'none' })
+      wx.showToast({ title: session.note || '这周这节加练先不上', icon: 'none' })
       setTimeout(function () {
         wx.navigateBack()
       }, 500)
@@ -130,6 +131,7 @@ Page({
 
   onUnload() {
     if (this.tick) clearInterval(this.tick)
+    this.clearSheetTimers()
     wx.setKeepScreenOn({ keepScreenOn: false })
   },
 
@@ -435,6 +437,10 @@ Page({
       segs = this.completedSegments || []
     }
     const grade = scoreCompletedSession({ kind: 'aux', restAddCount: 0 })
+    const durationSec = Math.max(
+      0,
+      Math.round((Date.now() - (this.sessionMeta.startedAt || Date.now())) / 1000)
+    )
     const log = {
       date: this.sessionMeta.date,
       weekday: this.sessionMeta.weekday,
@@ -443,18 +449,20 @@ Page({
       key: this.sessionMeta.key,
       startedAt: this.sessionMeta.startedAt,
       sets: segs,
-      durationSec: Math.max(
-        0,
-        Math.round((Date.now() - (this.sessionMeta.startedAt || Date.now())) / 1000)
-      ),
-      durationMin: Math.max(
-        0,
-        Math.round((Date.now() - (this.sessionMeta.startedAt || Date.now())) / 60000)
-      ),
+      durationSec: durationSec,
+      durationMin: Math.max(0, Math.round(durationSec / 60)),
       restAddCount: 0,
       score: grade.score,
       title: grade.title,
       finishedAt: Date.now()
+    }
+    const cal = require('../../../services/calories').estimateSessionCalories(
+      log,
+      storage.getProfile()
+    )
+    if (cal.kcal > 0) {
+      log.kcal = cal.kcal
+      log.kcalText = cal.text
     }
     storage.appendLog(log)
     storage.clearDraft()
@@ -462,26 +470,52 @@ Page({
     wx.redirectTo({ url: '/pages/session/summary/summary' })
   },
 
+  clearSheetTimers() {
+    if (this.sheetCloseTimer) {
+      clearTimeout(this.sheetCloseTimer)
+      this.sheetCloseTimer = null
+    }
+    if (this.sheetOpenTimer) {
+      clearTimeout(this.sheetOpenTimer)
+      this.sheetOpenTimer = null
+    }
+  },
+
   openExit() {
+    var that = this
     if (!this.data.paused) {
       this.togglePause()
     }
-    this.setData({ showExit: true })
+    this.clearSheetTimers()
+    this.setData({ showExit: true, sheetOpen: false })
+    this.sheetOpenTimer = setTimeout(function () {
+      that.setData({ sheetOpen: true })
+      that.sheetOpenTimer = null
+    }, 20)
   },
 
   closeExit() {
-    this.setData({ showExit: false })
+    var that = this
+    if (!this.data.showExit) return
+    this.clearSheetTimers()
+    this.setData({ sheetOpen: false })
+    this.sheetCloseTimer = setTimeout(function () {
+      that.setData({ showExit: false })
+      that.sheetCloseTimer = null
+    }, 240)
   },
 
   saveExit() {
+    this.clearSheetTimers()
     this.persist()
-    this.setData({ showExit: false })
+    this.setData({ showExit: false, sheetOpen: false })
     wx.reLaunch({ url: '/pages/today/today' })
   },
 
   discardExit() {
+    this.clearSheetTimers()
     storage.clearDraft()
-    this.setData({ showExit: false })
+    this.setData({ showExit: false, sheetOpen: false })
     wx.reLaunch({ url: '/pages/today/today' })
   }
 })

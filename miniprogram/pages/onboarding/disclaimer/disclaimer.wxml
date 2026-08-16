@@ -1,4 +1,4 @@
-<view class="page page-dock">
+<view class="page page-dock" style="padding-top: {{navPadTop}}px;">
   <scroll-view
     scroll-y
     class="page-scroll"
@@ -7,7 +7,7 @@
     enable-flex="{{true}}"
   >
     <view class="page-title">{{title}}</view>
-    <view class="page-sub">最后更新：{{updated}}{{viewOnly ? '' : ' · 建档与训练前须同意'}}</view>
+    <view class="page-sub">最后更新：{{updated}}{{viewOnly ? '' : ' · 建档和开练前先看一眼'}}</view>
 
     <view class="legal-intro">{{intro}}</view>
 
@@ -36,14 +36,14 @@
         <view class="check-box">
           <text wx:if="{{agreed}}" class="check-mark">✓</text>
         </view>
-        <text class="check-label">我已阅读并同意《法律免责声明》</text>
+        <text class="check-label">我已阅读并同意这份说明</text>
       </view>
       <button
         class="btn-primary {{agreed ? '' : 'locked'}}"
         disabled="{{!agreed}}"
         bindtap="accept"
-      >同意并继续</button>
-      <view class="btn-link disc-exit" bindtap="exitApp">不同意并退出</view>
+      >同意，继续</button>
+      <view class="btn-link disc-exit" bindtap="exitApp">先不练了</view>
     </block>
   </view>
 </view>

@@ -7,6 +7,7 @@ const {
 const { formatMmSs } = require('../../../utils/format')
 const { buildTodayView } = require('../../../services/plan')
 const { buildSessionCards } = require('../../../services/set-cards')
+const { estimateSessionCalories } = require('../../../services/calories')
 const copy = require('../../../utils/copy')
 
 function buildCompletedSetRows(raw) {
@@ -75,6 +76,9 @@ Page({
     hasDurationItems: false,
     durationExpanded: false,
     showDuration: false,
+    showCalories: false,
+    calorieText: '',
+    calorieNote: '',
     score: 90,
     title: '',
     tone: 'great',
@@ -105,6 +109,15 @@ Page({
     var showPlan = !!(plan && plan.showSetCards && (mainCards.length || accCards.length))
     var durationItems = durationSec > 0 ? durationItemsFromLog(log) : []
     var showDuration = durationSec > 0
+    var cal =
+      log.kcal > 0
+        ? {
+            kcal: log.kcal,
+            text: log.kcalText || '大约 ' + log.kcal + ' 千卡',
+            note: '按体重和训练时长估算，仅供参考'
+          }
+        : estimateSessionCalories(log, storage.getProfile())
+    var showCalories = !!(cal && cal.kcal > 0)
 
     this.setData({
       name: log.name || '训练',
@@ -113,6 +126,9 @@ Page({
       durationItems: durationItems,
       hasDurationItems: durationItems.length > 0,
       durationExpanded: false,
+      showCalories: showCalories,
+      calorieText: showCalories ? cal.text : '',
+      calorieNote: showCalories ? cal.note : '',
       score: grade.score,
       title: grade.title,
       tone: grade.tone || 'great',

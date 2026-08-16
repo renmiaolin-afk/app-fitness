@@ -1,9 +1,11 @@
 /**
  * 训练完成度评分 + 跨日结算 + 按上周均分调整训练周难度。
  * 分数只反映完成状态（完成 / 半途 / 未练），不因组间加时扣分。
+ * 计划从建档日起算第 1 天；周历按自然周周一到周日展示，建档日前不排课。
  */
 const storage = require('../utils/storage')
 const copy = require('../utils/copy')
+const cycleDay = require('../utils/cycle-day')
 
 function resolveWeekSlots(profile, planId) {
   // 懒加载，避免与 plan/set-cards 形成启动期循环依赖
@@ -15,10 +17,10 @@ var SCORE_PARTIAL = 50
 var SETTLE_LOOKBACK_DAYS = 21
 var DAY_MS = 24 * 60 * 60 * 1000
 
-var TITLE_COMPLETED = '今日已完成'
-var TITLE_PARTIAL = '未完成全部'
-var TITLE_MISSED = '今日未训练'
-var TITLE_LEAVE = '今日请假'
+var TITLE_COMPLETED = '练完了'
+var TITLE_PARTIAL = '练了一半'
+var TITLE_MISSED = '今天没练'
+var TITLE_LEAVE = '今天请假了'
 
 function clampScore(n) {
   var x = Math.round(Number(n) || 0)
@@ -28,35 +30,24 @@ function clampScore(n) {
 }
 
 function todayKey() {
-  return new Date().toISOString().slice(0, 10)
+  return cycleDay.todayKey()
 }
 
 function addDaysKey(dateKey, delta) {
-  var d = new Date(dateKey + 'T12:00:00')
-  d.setDate(d.getDate() + delta)
-  return d.toISOString().slice(0, 10)
+  return cycleDay.addDaysKey(dateKey, delta)
 }
 
 function mondayKey(dateKey) {
-  var d = new Date(dateKey + 'T12:00:00')
-  var js = d.getDay()
-  var offset = js === 0 ? -6 : 1 - js
-  d.setDate(d.getDate() + offset)
-  return d.toISOString().slice(0, 10)
+  return cycleDay.mondayKey(dateKey)
 }
 
 function weekdayOf(dateKey) {
-  var js = new Date(dateKey + 'T12:00:00').getDay()
-  return js === 0 ? 7 : js
+  return cycleDay.weekdayOf(dateKey)
 }
 
+/** 自然周内星期几（1=Mon）对应的日期 */
 function dateForWeekday(anchorKey, weekday) {
-  var d = new Date(anchorKey + 'T12:00:00')
-  var jsDay = d.getDay()
-  var todayWd = jsDay === 0 ? 7 : jsDay
-  var target = Number(weekday)
-  d.setDate(d.getDate() + (target - todayWd))
-  return d.toISOString().slice(0, 10)
+  return cycleDay.dateForCalendarWeekday(mondayKey(anchorKey), weekday)
 }
 
 /** 按分数粗分档（完成度导向；完成路径优先走 scoreCompletedSession） */
@@ -160,14 +151,15 @@ function isMissedLog(log) {
 
 function findDayLog(logs, date, weekday) {
   var wd = Number(weekday)
+  var byDate = null
   for (var i = 0; i < (logs || []).length; i++) {
     var l = logs[i]
     if (!isOutcomeLog(l)) continue
     if (l.date !== date) continue
-    if (Number(l.weekday) !== wd) continue
-    return l
+    if (!byDate) byDate = l
+    if (wd && Number(l.weekday) === wd) return l
   }
-  return null
+  return byDate
 }
 
 function ensureGrade(log) {
@@ -208,17 +200,45 @@ function slotMapByWeekday(slots) {
   return map
 }
 
+/** 漏练结算起点：建档当天；无 onboardedAt 的旧档案不截断 */
+function settleEarliestDate(profile) {
+  if (!profile || profile.onboardedAt == null || profile.onboardedAt === '') {
+    return null
+  }
+  var d = new Date(Number(profile.onboardedAt) || profile.onboardedAt)
+  if (isNaN(d.getTime())) return null
+  return d.toISOString().slice(0, 10)
+}
+
+/** 清掉建档前被误标的漏练（用户尚未使用产品的日子） */
+function prunePreOnboardMissed(profile) {
+  var earliest = settleEarliestDate(profile)
+  if (!earliest) return 0
+  var logs = storage.getLogs()
+  var next = logs.filter(function (l) {
+    if (!l || l.kind !== 'missed' || !l.date) return true
+    return l.date >= earliest
+  })
+  var removed = logs.length - next.length
+  if (removed > 0) storage.setLogs(next)
+  return removed
+}
+
 /**
  * 扫描近 N 天已过去的训练槽，无结局则写入 missed / partial。
  * 跨日草稿按完成比例结算并清草稿（不再提供跨日「继续」）。
+ * 建档前的日子不记漏练。槽位按微周期第几天对齐。
  * @returns {number} 新结算条数
  */
 function settlePastTrainingDays(profile) {
   if (!profile) return 0
-  var planId = profile.planId || 'strength-hybrid-mix'
+  profile = cycleDay.ensureCycleAnchors(profile, storage)
+  prunePreOnboardMissed(profile)
+  var planId = require('./plan').normalizePlanId(profile.planId)
   var slots = resolveWeekSlots(profile, planId) || []
   var byWd = slotMapByWeekday(slots)
   var anchor = todayKey()
+  var earliest = settleEarliestDate(profile)
   var logs = storage.getLogs()
   var draft = storage.getDraft()
   var added = 0
@@ -226,7 +246,8 @@ function settlePastTrainingDays(profile) {
 
   for (var ago = 1; ago <= SETTLE_LOOKBACK_DAYS; ago++) {
     var date = addDaysKey(anchor, -ago)
-    var wd = weekdayOf(date)
+    if (earliest && date < earliest) continue
+    var wd = cycleDay.cycleDayOf(profile, date)
     var slot = byWd[wd]
     if (!slot || slot.type === 'rest') continue
     if (findDayLog(logs, date, wd)) continue
@@ -261,15 +282,16 @@ function settlePastTrainingDays(profile) {
   return added
 }
 
-/** 某自然周（周一 dateKey）训练日均分；无结局按 0 */
-function averageWeekScore(logs, weekMonday, slots) {
+/** 某微周期周（周起点 dateKey）训练日均分；无结局按 0；建档前不计入 */
+function averageWeekScore(logs, weekStart, slots, earliestDate) {
   var scores = []
   for (var i = 0; i < (slots || []).length; i++) {
     var slot = slots[i]
     if (!slot || slot.type === 'rest') continue
     var wd = Number(slot.weekday) || i + 1
-    var date = dateForWeekday(weekMonday, wd)
+    var date = cycleDay.dateForCycleDay(weekStart, wd)
     if (date > todayKey()) continue
+    if (earliestDate && date < earliestDate) continue
     var log = findDayLog(logs, date, wd)
     if (log) scores.push(ensureGrade(log).score)
     else scores.push(0)
@@ -313,53 +335,59 @@ function weekQualityHintText(lq) {
   if (!lq || lq.avg == null) return ''
   var avg = lq.avg
   if (lq.decision === 'advance') {
-    return '上周均分 ' + avg + ' · 难度已上调'
+    return '上周平均 ' + avg + ' 分 · 这周难度上调了一点'
   }
   if (lq.decision === 'hold') {
-    return '上周均分 ' + avg + ' · 本周重复相同难度'
+    return '上周平均 ' + avg + ' 分 · 这周先按同样难度练'
   }
   if (lq.decision === 'ease') {
-    return '上周均分 ' + avg + ' · 本周略降难度'
+    return '上周平均 ' + avg + ' 分 · 这周稍微放轻松一点'
   }
   return ''
 }
 
 /**
- * 跨入新自然周时，按上周完成质量调整 currentWeek（处方难度）。
+ * 跨入新微周期周时，按上周完成质量调整 currentWeek（处方难度）。
  * @returns {object|null} lastWeekQuality
  */
 function maybeAdvanceTrainingWeek(profile) {
   if (!profile) return null
+  profile = cycleDay.ensureCycleAnchors(profile, storage)
   var today = todayKey()
-  var thisMonday = mondayKey(today)
+  var thisWeekStart = cycleDay.cycleWeekStartKey(profile, today)
   var weekStart = profile.trainingWeekStart
 
   if (!weekStart) {
     var nextInit = Object.assign({}, profile, {
-      trainingWeekStart: thisMonday,
+      trainingWeekStart: thisWeekStart,
       currentWeek: profile.currentWeek || 1
     })
     storage.setProfile(nextInit)
     return null
   }
 
-  if (weekStart >= thisMonday) {
+  if (weekStart >= thisWeekStart) {
     return profile.lastWeekQuality || null
   }
 
-  var planId = profile.planId || 'strength-hybrid-mix'
+  var planId = require('./plan').normalizePlanId(profile.planId)
   var slots = resolveWeekSlots(profile, planId) || []
   var cursor = weekStart
   var working = Object.assign({}, profile)
   var lastMeta = null
   var guard = 0
 
-  while (cursor < thisMonday && guard < 12) {
+  while (cursor < thisWeekStart && guard < 12) {
     guard++
     // 确保该周已结算后再取均分
     settlePastTrainingDays(working)
     var logs = storage.getLogs()
-    var avg = averageWeekScore(logs, cursor, slots)
+    var avg = averageWeekScore(
+      logs,
+      cursor,
+      slots,
+      settleEarliestDate(working)
+    )
     if (avg == null) avg = 0
     var decided = decideNextWeek(
       avg,
@@ -381,20 +409,21 @@ function maybeAdvanceTrainingWeek(profile) {
     cursor = nextCursor
   }
 
-  working.trainingWeekStart = thisMonday
+  working.trainingWeekStart = thisWeekStart
   storage.setProfile(working)
   return lastMeta
 }
 
-/** 本周各 weekday → 结局 log（按日历对齐） */
+/** 本自然周各日历星期（1=Mon）→ 结局 log */
 function weekOutcomeMap(logs, anchorKey) {
   var map = {}
+  var monday = mondayKey(anchorKey)
+  var sunday = addDaysKey(monday, 6)
   ;(logs || []).forEach(function (l) {
     if (!isOutcomeLog(l) || !l.date) return
-    var wd = Number(l.weekday)
-    if (!wd) return
-    if (l.date !== dateForWeekday(anchorKey, wd)) return
-    if (!map[wd]) map[wd] = l
+    if (l.date < monday || l.date > sunday) return
+    var calWd = weekdayOf(l.date)
+    if (!map[calWd]) map[calWd] = l
   })
   return map
 }
@@ -447,7 +476,7 @@ function durationItemsFromLog(log) {
     var move = s.moveName || s.name || ''
     var label =
       s.label ||
-      (s.kind === 'warmup' ? '热身' : s.kind === 'accessory' ? '辅项' : s.kind === 'work' ? '工作' : '')
+      (s.kind === 'warmup' ? '热身' : s.kind === 'accessory' ? '辅助' : s.kind === 'work' ? '正式' : '')
     var base = move && label && move !== label ? move + ' · ' + label : move || label || s.block || '组'
     var key = String(base)
     countByKey[key] = (countByKey[key] || 0) + 1
@@ -482,6 +511,11 @@ module.exports = {
   mondayKey: mondayKey,
   addDaysKey: addDaysKey,
   weekdayOf: weekdayOf,
+  cycleDayOf: cycleDay.cycleDayOf,
+  cycleDayIndex: cycleDay.cycleDayIndex,
+  cycleWeekStartKey: cycleDay.cycleWeekStartKey,
+  cycleStartKey: cycleDay.cycleStartKey,
+  ensureCycleAnchors: cycleDay.ensureCycleAnchors,
   isDraftStaleOver24h: isDraftStaleOver24h,
   averageWeekScore: averageWeekScore,
   durationSecFromLog: durationSecFromLog,

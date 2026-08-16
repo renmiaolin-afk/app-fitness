@@ -82,7 +82,7 @@
             <text class="plan-name">{{planName}}</text>
             <text class="plan-meta">第 {{week}} / {{totalWeeks}} 周</text>
             <view class="plan-goal" wx:if="{{progressText}}">
-              <text class="plan-goal-k">本周期目标</text>
+              <text class="plan-goal-k">这周期目标</text>
               <text class="plan-goal-v">{{progressText}}</text>
             </view>
           </view>
@@ -115,12 +115,43 @@
           </view>
         </view>
       </view>
+
+      <!-- 其他 -->
+      <view class="section">
+        <view
+          class="panel link-panel"
+          bindtap="openDisclaimer"
+          hover-class="pressable-hover"
+          hover-start-time="0"
+          hover-stay-time="80"
+          aria-role="button"
+          aria-label="看看免责说明"
+        >
+          <text class="link-label">免责说明</text>
+          <text class="chev">›</text>
+        </view>
+      </view>
     </view>
   </scroll-view>
 
   <view class="footer me-footer">
-    <button class="me-close-btn" bindtap="goBack">关闭</button>
-    <view class="btn-link me-legal" bindtap="openDisclaimer">法律免责声明</view>
-    <view class="btn-link danger" bindtap="resetAll">清除本地数据并重新建档</view>
+    <view class="footer-row">
+      <button
+        class="btn-secondary footer-btn-side"
+        hover-class="pressable-hover"
+        hover-start-time="0"
+        hover-stay-time="80"
+        bindtap="resetAll"
+      >清空数据，重新建档</button>
+      <button
+        class="btn-primary footer-btn-main"
+        hover-class="pressable-hover"
+        hover-start-time="0"
+        hover-stay-time="80"
+        bindtap="goBack"
+      >关闭</button>
+    </view>
   </view>
+
+  <cycle-sheet show="{{cycleSheetShow}}" bind:close="closeCycleSheet" />
 </view>

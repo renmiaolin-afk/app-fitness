@@ -9,7 +9,7 @@
 ├── strengthTier: beginner | intermediate | advanced
 ├── 1RM（深蹲 / 卧推 / 硬拉）
 ├── auxiliaries: ["crossfit" | "hyrox" | "running"]  （≤2）
-└── planId: strength-hybrid-mix | strength-linear | strength-time-efficient
+└── planId: strength-frequent | strength-basic | strength-lean
 
 组合 key = sort(auxiliaries).join("+") 或 none
 
@@ -57,9 +57,9 @@
 
 | planId | 名称 | 默认策略（选 CF+跑步时） |
 |---|---|---|
-| `strength-hybrid-mix` | 挪威力训计划 | 蹲/卧/拉/跑/上推/CF/休（4×4/2×2/1×8） |
-| `strength-linear` | 线性 5×5 计划 | 力量优先；跑步作恢复，CF 暂缓 |
-| `strength-time-efficient` | 5/3/1 力量计划 | 蹲/上肢/拉/CF/休/跑/休 |
+| `strength-frequent` | 高频力训计划 | 蹲/卧/拉/跑/上推/CF/休（4×4/2×2/1×8） |
+| `strength-basic` | 线性 5×5 计划 | 力量优先；跑步作恢复，CF 暂缓 |
+| `strength-lean` | 5/3/1 力量计划 | 蹲/上肢/拉/CF/休/跑/休 |
 
 ## 剂量红线
 
@@ -86,7 +86,7 @@
 ## 示例：原型用户
 
 ```text
-planId: strength-hybrid-mix
+planId: strength-frequent
 auxiliaries: ["crossfit", "running"]  → key = crossfit+running
 strengthTier: advanced
 

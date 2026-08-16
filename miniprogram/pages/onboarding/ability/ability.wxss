@@ -7,7 +7,7 @@
 .gender {
   flex: 1;
   height: 80rpx;
-  border-radius: var(--r-lg);
+  border-radius: var(--btn-r);
   background: var(--fill);
   color: var(--text);
   font-size: var(--fs-md);
@@ -20,7 +20,7 @@
 .gender.active {
   background: var(--accent);
   background-image: var(--grad-accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .metric {

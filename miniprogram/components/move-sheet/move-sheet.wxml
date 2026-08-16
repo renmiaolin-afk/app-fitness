@@ -16,13 +16,19 @@
     <view class="head">
       <view class="titles">
         <text class="title">{{media.title}}</text>
-        <text class="sub">动作示范与要点</text>
+        <text class="sub">怎么练、看哪里</text>
       </view>
-      <view class="close" bindtap="onClose">关闭</view>
+      <view
+        class="close"
+        hover-class="pressable-hover"
+        hover-start-time="0"
+        hover-stay-time="80"
+        bindtap="onClose"
+      >关闭</view>
     </view>
 
     <scroll-view scroll-y class="body" show-scrollbar="{{false}}">
-      <view class="section-title">训练要点</view>
+      <view class="section-title">先看这几条</view>
       <view class="cue" wx:for="{{media.cues}}" wx:key="*this">
         <text class="dot">·</text>
         <text class="cue-text">{{item}}</text>

@@ -3,7 +3,7 @@ const cloudConfig = require('./config/cloud')
 
 App({
   globalData: {
-    accent: '#FF2D55',
+    accent: '#ff2d55',
     cloudReady: false
   },
 

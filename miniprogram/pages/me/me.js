@@ -1,13 +1,12 @@
 const storage = require('../../utils/storage')
 const { cycleMeta, planDisplayName } = require('../../services/plan')
 const { estimateBlockGain } = require('../../services/progress-target')
-const { statusNavPadTopPx } = require('../../utils/nav')
 const disclaimer = require('../../services/disclaimer')
 
 const DURATION_LABELS = {
-  30: '30 分钟',
-  60: '约 1 小时',
-  90: '90 分钟+'
+  30: '半小时左右',
+  60: '大概 1 小时',
+  90: '一个半小时+'
 }
 
 const EFFORT_LABELS = {
@@ -98,6 +97,7 @@ function patchProfile(patch) {
 }
 
 Page({
+  behaviors: [require('../../behaviors/immersive-nav')],
   data: {
     ready: false,
     navPadTop: 88,
@@ -118,16 +118,18 @@ Page({
     effortLabel: '',
     sleepLabel: '',
     bodyLabel: '',
-    durationLabel: ''
-  },
-
-  onLoad() {
-    this.setData({ navPadTop: statusNavPadTopPx() })
+    durationLabel: '',
+    cycleSheetShow: false
   },
 
   onShow() {
-    this.setData({ navPadTop: statusNavPadTopPx() })
     this.refresh()
+  },
+
+  onHide() {
+    if (this.data.cycleSheetShow) {
+      this.setData({ cycleSheetShow: false })
+    }
   },
 
   refresh() {
@@ -135,14 +137,14 @@ Page({
     const profile = storage.getProfile()
     const oneRm = profile.oneRm || {}
     const habits = profile.habits || {}
-    const sleepMap = { good: '很好', ok: '一般', poor: '较差' }
-    const bodyMap = { none: '没有旧伤', old: '有旧伤', sore: '易酸痛' }
+    const sleepMap = { good: '睡得挺好', ok: '一般般', poor: '经常不够' }
+    const bodyMap = { none: '没什么', old: '有旧伤', sore: '容易酸' }
     const gain = estimateBlockGain(profile)
     const total =
       (oneRm.squat || 0) + (oneRm.bench || 0) + (oneRm.deadlift || 0)
     let progressText = ''
     if (gain && gain.mid > 0) {
-      progressText = '估算 +' + gain.mid + ' kg'
+      progressText = '大概 +' + gain.mid + ' kg'
     } else if (gain && gain.summary) {
       progressText = gain.summary
     }
@@ -185,7 +187,7 @@ Page({
     const self = this
     persistAvatar(temp, function (url) {
       if (!url) {
-        wx.showToast({ title: '头像保存失败', icon: 'none' })
+        wx.showToast({ title: '头像没存上，再试一次', icon: 'none' })
         return
       }
       patchProfile({ avatarUrl: url })
@@ -203,7 +205,11 @@ Page({
   },
 
   goCycle() {
-    wx.navigateTo({ url: '/pages/cycle/cycle' })
+    this.setData({ cycleSheetShow: true })
+  },
+
+  closeCycleSheet() {
+    this.setData({ cycleSheetShow: false })
   },
 
   reOnboard() {
@@ -216,9 +222,9 @@ Page({
 
   resetAll() {
     wx.showModal({
-      title: '清除本地数据？',
-      content: '档案、草稿与训练记录都会清空',
-      confirmColor: '#FF2D55',
+      title: '清空本地数据？',
+      content: '档案、草稿和训练记录都会清掉，然后重新建档',
+      confirmColor: '#ff2d55',
       success(res) {
         if (!res.confirm) return
         storage.clearProfile()

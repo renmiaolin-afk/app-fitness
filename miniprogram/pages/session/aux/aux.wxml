@@ -35,30 +35,67 @@
     <view class="cta-row">
       <view
         class="btn-side icon"
+        hover-class="pressable-hover"
+        hover-start-time="0"
+        hover-stay-time="80"
         bindtap="togglePause"
         aria-role="button"
         aria-label="{{paused ? '继续' : '暂停'}}"
       >{{paused ? '▶' : '⏸'}}</view>
       <button
         class="btn-primary cta-main {{canComplete ? '' : 'locked'}}"
+        hover-class="pressable-hover"
+        hover-start-time="0"
+        hover-stay-time="80"
         bindtap="next"
         disabled="{{!canComplete}}"
       >{{completeLabel}}</button>
-      <view class="btn-side icon" bindtap="openExit" aria-role="button" aria-label="关闭">✕</view>
+      <view
+        class="btn-side icon"
+        hover-class="pressable-hover"
+        hover-start-time="0"
+        hover-stay-time="80"
+        bindtap="openExit"
+        aria-role="button"
+        aria-label="关闭"
+      >✕</view>
     </view>
   </view>
 
-  <view class="mask" wx:if="{{showExit}}" catchtouchmove="noop" bindtap="closeExit">
-    <view class="sheet" catchtap="noop">
+  <view
+    class="mask sheet-mask {{sheetOpen ? 'sheet-open' : ''}}"
+    wx:if="{{showExit}}"
+    catchtouchmove="noop"
+    bindtap="closeExit"
+  >
+    <view class="sheet sheet-panel {{sheetOpen ? 'sheet-open' : ''}}" catchtap="noop">
       <view class="sheet-handle"></view>
-      <view class="sheet-title">要离开训练吗？</view>
-      <view class="sheet-desc">已完成的段会保存，今天还能接着练。</view>
+      <view class="sheet-title">先离开一下？</view>
+      <view class="sheet-desc">练过的段落会留着，今天还能接着练。</view>
       <view class="sheet-actions">
         <view class="sheet-row">
-          <button class="sheet-btn sheet-btn-primary" bindtap="closeExit">继续练</button>
-          <button class="sheet-btn sheet-btn-secondary" bindtap="saveExit">先离开，稍后继续</button>
+          <button
+            class="sheet-btn sheet-btn-primary"
+            hover-class="pressable-hover"
+            hover-start-time="0"
+            hover-stay-time="80"
+            bindtap="closeExit"
+          >继续练</button>
+          <button
+            class="sheet-btn sheet-btn-secondary"
+            hover-class="pressable-hover"
+            hover-start-time="0"
+            hover-stay-time="80"
+            bindtap="saveExit"
+          >先走，一会再练</button>
         </view>
-        <view class="sheet-btn-danger" bindtap="discardExit">放弃本次，不保存</view>
+        <view
+          class="sheet-btn-danger"
+          hover-class="pressable-hover"
+          hover-start-time="0"
+          hover-stay-time="80"
+          bindtap="discardExit"
+        >这次不算了，不保存</view>
       </view>
     </view>
   </view>

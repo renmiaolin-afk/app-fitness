@@ -7,6 +7,8 @@ const {
 const disclaimer = require('../../../services/disclaimer')
 
 Page({
+  behaviors: [require('../../../behaviors/immersive-nav')],
+
   data: {
     fromMe: false,
     ctaLabel: '下一步',
